@@ -796,6 +796,190 @@
   }
   .strength-set-pill strong { color: var(--forest); font-weight: 600; }
 
+  /* WOD */
+  .wod-format-picker {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    margin-bottom: 20px;
+  }
+  .wod-format-btn {
+    background: var(--paper-card);
+    border: 1.5px solid var(--line);
+    border-radius: 12px;
+    padding: 16px 12px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .wod-format-btn.active {
+    border-color: var(--forest);
+    background: var(--forest);
+  }
+  .wod-format-btn.active .wod-format-name { color: var(--paper-card); }
+  .wod-format-btn.active .wod-format-desc { color: rgba(255,255,255,0.8); }
+  .wod-format-name {
+    font-family: 'Inter', sans-serif;
+    font-weight: 700;
+    font-size: 15px;
+    color: var(--ink);
+    margin-bottom: 4px;
+    letter-spacing: 0.5px;
+  }
+  .wod-format-desc {
+    font-family: 'Inter', sans-serif;
+    font-size: 11px;
+    color: var(--ink-faint);
+    line-height: 1.3;
+  }
+  .wod-timer-display {
+    background: var(--forest);
+    border-radius: 18px;
+    padding: 32px 24px;
+    text-align: center;
+    margin-bottom: 16px;
+    position: relative;
+    overflow: hidden;
+  }
+  .wod-timer-time {
+    font-family: 'Fraunces', serif;
+    font-weight: 400;
+    font-size: 68px;
+    color: var(--paper-card);
+    line-height: 1;
+    letter-spacing: -1px;
+    font-variant-numeric: tabular-nums;
+  }
+  .wod-timer-label {
+    font-family: 'Inter', sans-serif;
+    font-weight: 600;
+    font-size: 12px;
+    color: rgba(255,255,255,0.75);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-top: 10px;
+  }
+  .wod-timer-round {
+    font-family: 'Inter', sans-serif;
+    font-weight: 700;
+    font-size: 15px;
+    color: var(--sand, #C9B89A);
+    margin-top: 8px;
+    letter-spacing: 0.5px;
+  }
+  .wod-timer-controls {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+  }
+  .wod-timer-controls .btn { margin-top: 0; }
+  .wod-config {
+    display: flex;
+    gap: 12px;
+    align-items: flex-end;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+  }
+  .wod-config .field { flex: 1; min-width: 120px; }
+  .wod-config label {
+    font-family: 'Inter', sans-serif;
+    font-weight: 500;
+    font-size: 11px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    margin-bottom: 6px;
+  }
+  .wod-exercises-list {
+    background: var(--paper-card);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: 18px 20px;
+    margin-bottom: 16px;
+  }
+  .wod-exercises-list h4 {
+    font-family: 'Inter', sans-serif;
+    font-weight: 600;
+    font-size: 11px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--forest);
+    margin-bottom: 14px;
+  }
+  .wod-ex-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 9px 0;
+    border-bottom: 1px solid var(--line);
+  }
+  .wod-ex-row:last-child { border-bottom: none; }
+  .wod-ex-check {
+    width: 22px; height: 22px;
+    border-radius: 6px;
+    border: 1.5px solid var(--line-strong);
+    flex-shrink: 0;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--paper);
+    transition: all 0.15s;
+  }
+  .wod-ex-check.on { background: var(--forest); border-color: var(--forest); }
+  .wod-ex-check.on::after { content: '✓'; color: var(--paper-card); font-size: 13px; font-weight: 600; }
+  .wod-ex-reps {
+    font-family: 'Fraunces', serif;
+    font-weight: 500;
+    font-size: 17px;
+    color: var(--forest);
+    min-width: 44px;
+  }
+  .wod-ex-name {
+    font-family: 'Fraunces', serif;
+    font-size: 16px;
+    color: var(--ink);
+    flex: 1;
+  }
+  .wod-ex-remove {
+    background: transparent;
+    border: none;
+    color: var(--ink-faint);
+    cursor: pointer;
+    font-size: 18px;
+    padding: 2px 6px;
+  }
+  .wod-ex-remove:hover { color: var(--clay); }
+  .wod-add-ex {
+    display: flex;
+    gap: 10px;
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid var(--line);
+  }
+  .wod-add-ex select { flex: 2; }
+  .wod-add-ex input { flex: 1; min-width: 0; }
+  .wod-add-ex button {
+    flex-shrink: 0;
+    background: var(--paper-sunk);
+    border: 1px solid var(--line-strong);
+    border-radius: 8px;
+    color: var(--forest);
+    font-family: 'Inter', sans-serif;
+    font-weight: 600;
+    font-size: 13px;
+    padding: 0 16px;
+    cursor: pointer;
+  }
+  .wod-add-ex button:hover { background: var(--sand-light, #E8DFD0); }
+  .wod-preset-note {
+    font-family: 'Inter', sans-serif;
+    font-size: 12px;
+    color: var(--ink-faint);
+    line-height: 1.5;
+    margin-bottom: 16px;
+  }
+
   /* RYGØVELSER */
   .back-intro {
     background: var(--paper-card);
@@ -939,6 +1123,7 @@
   <button data-panel="daily">Daglige øvelser</button>
   <button data-panel="back">Rygøvelser</button>
   <button data-panel="yoga">Yoga</button>
+  <button data-panel="wod">WOD</button>
   <button data-panel="log">Log træning</button>
   <button data-panel="history">Historik</button>
   <button data-panel="stats">Udvikling</button>
@@ -1045,6 +1230,54 @@
 
     <div class="section-title" style="margin-top:32px">Historik</div>
     <div id="yogaHistory"></div>
+  </section>
+
+  <section class="panel" id="panel-wod">
+    <div class="section-title">WOD — Workout of the Day</div>
+    <p class="wod-preset-note">Vælg et format, sæt tiden, og byg din runde af øvelser. Timeren bipper undervejs. Kropsvægt-øvelser fra dit styrkeprogram — perfekt til en hurtig, hård session.</p>
+
+    <div class="wod-format-picker">
+      <div class="wod-format-btn active" data-format="amrap">
+        <div class="wod-format-name">AMRAP</div>
+        <div class="wod-format-desc">Flest runder på tid</div>
+      </div>
+      <div class="wod-format-btn" data-format="emom">
+        <div class="wod-format-name">EMOM</div>
+        <div class="wod-format-desc">Ny øvelse hvert minut</div>
+      </div>
+      <div class="wod-format-btn" data-format="fortime">
+        <div class="wod-format-name">FOR TIME</div>
+        <div class="wod-format-desc">Fast antal runder</div>
+      </div>
+    </div>
+
+    <div class="wod-config" id="wodConfig"></div>
+
+    <div class="wod-timer-display">
+      <div class="wod-timer-time" id="wodTime">00:00</div>
+      <div class="wod-timer-label" id="wodLabel">Klar</div>
+      <div class="wod-timer-round" id="wodRound"></div>
+    </div>
+
+    <div class="wod-timer-controls">
+      <button class="btn" id="wodStartBtn">Start</button>
+      <button class="btn btn-secondary" id="wodResetBtn">Nulstil</button>
+    </div>
+
+    <div class="wod-exercises-list">
+      <h4 id="wodExTitle">Øvelser i runden</h4>
+      <div id="wodExList"></div>
+      <div class="wod-add-ex">
+        <select id="wodExSelect"></select>
+        <input type="number" id="wodExReps" placeholder="reps" inputmode="numeric" value="10">
+        <button id="wodAddExBtn">Tilføj</button>
+      </div>
+    </div>
+
+    <button class="btn" id="wodLogBtn">Gem resultat</button>
+
+    <div class="section-title" style="margin-top:36px">Historik</div>
+    <div id="wodHistory"></div>
   </section>
 
   <section class="panel" id="panel-log">
@@ -1272,8 +1505,9 @@
         dailyLog = d.dailyLog || [];
         backLog = d.backLog || [];
         yogaLog = d.yogaLog || [];
+        wodLog = d.wodLog || [];
       } else {
-        entries = []; weekProgress = {}; dailyLog = []; backLog = []; yogaLog = [];
+        entries = []; weekProgress = {}; dailyLog = []; backLog = []; yogaLog = []; wodLog = [];
       }
     } catch (e) {
       showToast('Kunne ikke hente data');
@@ -1284,7 +1518,7 @@
     if (!currentUser) return;
     try {
       const ref = doc(db, 'users', currentUser.uid);
-      await setDoc(ref, { entries, weekProgress, dailyLog, backLog, yogaLog, updated: Date.now() });
+      await setDoc(ref, { entries, weekProgress, dailyLog, backLog, yogaLog, wodLog, updated: Date.now() });
     } catch (e) {
       showToast('Kunne ikke gemme i skyen');
     }
@@ -1364,6 +1598,7 @@
   let dailyLog = []; // [{id, date, reps: {d_crunch: 20, ...}}] // { exerciseId: [{reps, unit}, ...] }
   let backLog = []; // [{id, date, holds: {b_thorakal_arme: 20, ...}}]
   let yogaLog = []; // [{id, date}] — bare markering af at rutinen er lavet
+  let wodLog = []; // [{id, date, format, result, detail}]
 
   // FULL BODY PROGRAM — fra #Levforhelvede
   const FULLBODY = [
@@ -1622,6 +1857,9 @@
   async function saveYogaLog() {
     await cloudSave();
   }
+  async function saveWodLog() {
+    await cloudSave();
+  }
 
   // ============================
   // BACKUP — eksport / import
@@ -1635,6 +1873,7 @@
       dailyLog: dailyLog,
       backLog: backLog,
       yogaLog: yogaLog,
+      wodLog: wodLog,
     };
     const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
@@ -1664,6 +1903,7 @@
         dailyLog = data.dailyLog || [];
         backLog = data.backLog || [];
         yogaLog = data.yogaLog || [];
+        wodLog = data.wodLog || [];
         await saveEntries();
         await saveProgress();
         await saveDailyLog();
@@ -2426,6 +2666,9 @@
       if (btn.dataset.panel === 'yoga') {
         renderYogaAll();
       }
+      if (btn.dataset.panel === 'wod') {
+        renderWodAll();
+      }
     });
   });
 
@@ -2827,6 +3070,281 @@
   }
 
   // ============================
+  // WOD — Workout of the Day
+  // ============================
+  const WOD_EXERCISES = [
+    { id: 'pushup', name: 'Push ups' },
+    { id: 'squat', name: 'Squat' },
+    { id: 'burpee', name: 'Burpee' },
+    { id: 'mtnclm', name: 'Mountain climbers' },
+    { id: 'bsplit', name: 'Bulgarian Split Squat' },
+    { id: 'crunch', name: 'Crunches' },
+    { id: 'super', name: 'Superman' },
+    { id: 'plank', name: 'Plank (sek)' },
+  ];
+
+  let wodFormat = 'amrap';
+  let wodRoundExercises = [
+    { name: 'Push ups', reps: 10 },
+    { name: 'Squat', reps: 15 },
+    { name: 'Burpee', reps: 10 },
+  ];
+  let wodTimer = null;
+  let wodElapsed = 0;      // sekunder gået
+  let wodRunning = false;
+  let wodRoundsDone = 0;   // AMRAP: runder / For Time: aktuel runde
+  let wodConfig = { minutes: 12, rounds: 5 }; // AMRAP=minutes, EMOM=minutes, ForTime=rounds
+
+  // Bip-lyd via Web Audio (ingen fil nødvendig)
+  let wodAudioCtx = null;
+  function wodBeep(freq = 800, dur = 0.12, vol = 0.3) {
+    try {
+      if (!wodAudioCtx) wodAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      const osc = wodAudioCtx.createOscillator();
+      const gain = wodAudioCtx.createGain();
+      osc.connect(gain); gain.connect(wodAudioCtx.destination);
+      osc.frequency.value = freq;
+      osc.type = 'sine';
+      gain.gain.setValueAtTime(vol, wodAudioCtx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, wodAudioCtx.currentTime + dur);
+      osc.start();
+      osc.stop(wodAudioCtx.currentTime + dur);
+    } catch (e) {}
+  }
+  function wodTripleBeep() {
+    wodBeep(700, 0.15); setTimeout(()=>wodBeep(700,0.15), 200); setTimeout(()=>wodBeep(1000,0.3), 400);
+  }
+
+  function fmtClock(sec) {
+    const m = Math.floor(sec/60);
+    const s = sec % 60;
+    return `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+  }
+
+  function renderWodConfig() {
+    const cont = document.getElementById('wodConfig');
+    if (wodFormat === 'amrap') {
+      cont.innerHTML = `
+        <div class="field">
+          <label>Varighed (min)</label>
+          <input type="number" id="wodMinutes" value="${wodConfig.minutes}" min="1" inputmode="numeric">
+        </div>`;
+    } else if (wodFormat === 'emom') {
+      cont.innerHTML = `
+        <div class="field">
+          <label>Antal minutter</label>
+          <input type="number" id="wodMinutes" value="${wodConfig.minutes}" min="1" inputmode="numeric">
+        </div>`;
+    } else {
+      cont.innerHTML = `
+        <div class="field">
+          <label>Antal runder</label>
+          <input type="number" id="wodRounds" value="${wodConfig.rounds}" min="1" inputmode="numeric">
+        </div>`;
+    }
+    const minEl = document.getElementById('wodMinutes');
+    if (minEl) minEl.addEventListener('change', () => { wodConfig.minutes = parseInt(minEl.value)||12; resetWod(); });
+    const rndEl = document.getElementById('wodRounds');
+    if (rndEl) rndEl.addEventListener('change', () => { wodConfig.rounds = parseInt(rndEl.value)||5; resetWod(); });
+  }
+
+  function renderWodExTitle() {
+    const t = document.getElementById('wodExTitle');
+    if (wodFormat === 'emom') t.textContent = 'Øvelser — én pr. minut (roterer)';
+    else t.textContent = 'Øvelser i én runde';
+  }
+
+  function renderWodExList() {
+    const cont = document.getElementById('wodExList');
+    cont.innerHTML = wodRoundExercises.map((ex, i) => `
+      <div class="wod-ex-row">
+        <div class="wod-ex-reps">${ex.reps}×</div>
+        <div class="wod-ex-name">${ex.name}</div>
+        <button class="wod-ex-remove" data-wod-ex="${i}">✕</button>
+      </div>
+    `).join('') || '<div style="color:var(--ink-faint);font-family:Inter,sans-serif;font-size:13px">Tilføj øvelser nedenfor</div>';
+    cont.querySelectorAll('.wod-ex-remove').forEach(btn => {
+      btn.addEventListener('click', () => {
+        wodRoundExercises.splice(parseInt(btn.dataset.wodEx), 1);
+        renderWodExList();
+      });
+    });
+  }
+
+  function populateWodSelect() {
+    const sel = document.getElementById('wodExSelect');
+    sel.innerHTML = WOD_EXERCISES.map(e => `<option value="${e.name}">${e.name}</option>`).join('');
+  }
+
+  function updateWodDisplay() {
+    const timeEl = document.getElementById('wodTime');
+    const labelEl = document.getElementById('wodLabel');
+    const roundEl = document.getElementById('wodRound');
+
+    if (wodFormat === 'amrap') {
+      const total = wodConfig.minutes * 60;
+      const remaining = Math.max(0, total - wodElapsed);
+      timeEl.textContent = fmtClock(remaining);
+      labelEl.textContent = wodRunning ? 'AMRAP — kør!' : 'AMRAP klar';
+      roundEl.textContent = `Runder: ${wodRoundsDone}`;
+    } else if (wodFormat === 'emom') {
+      const total = wodConfig.minutes * 60;
+      const remaining = Math.max(0, total - wodElapsed);
+      const currentMin = Math.floor(wodElapsed / 60);
+      const exIdx = currentMin % (wodRoundExercises.length || 1);
+      const secIntoMin = wodElapsed % 60;
+      timeEl.textContent = fmtClock(60 - secIntoMin);
+      labelEl.textContent = wodRunning
+        ? (wodRoundExercises[exIdx] ? `${wodRoundExercises[exIdx].reps}× ${wodRoundExercises[exIdx].name}` : 'EMOM')
+        : 'EMOM klar';
+      roundEl.textContent = `Minut ${currentMin+1} / ${wodConfig.minutes}`;
+    } else {
+      // For Time — tæller op
+      timeEl.textContent = fmtClock(wodElapsed);
+      labelEl.textContent = wodRunning ? 'For Time — kør!' : 'For Time klar';
+      roundEl.textContent = `Runde ${wodRoundsDone} / ${wodConfig.rounds}`;
+    }
+  }
+
+  function tickWod() {
+    wodElapsed++;
+    if (wodFormat === 'amrap') {
+      const total = wodConfig.minutes * 60;
+      const remaining = total - wodElapsed;
+      if (remaining === 3 || remaining === 2 || remaining === 1) wodBeep(700, 0.1);
+      if (remaining <= 0) { finishWod(); wodTripleBeep(); return; }
+    } else if (wodFormat === 'emom') {
+      const total = wodConfig.minutes * 60;
+      if (wodElapsed % 60 === 0 && wodElapsed < total) wodBeep(900, 0.2); // nyt minut
+      if (wodElapsed >= total) { finishWod(); wodTripleBeep(); return; }
+    }
+    updateWodDisplay();
+  }
+
+  function startWod() {
+    if (wodRunning) {
+      // Pause
+      clearInterval(wodTimer);
+      wodRunning = false;
+      document.getElementById('wodStartBtn').textContent = 'Fortsæt';
+      updateWodDisplay();
+      return;
+    }
+    if (wodRoundExercises.length === 0) { showToast('Tilføj mindst én øvelse'); return; }
+    wodRunning = true;
+    if (wodAudioCtx && wodAudioCtx.state === 'suspended') wodAudioCtx.resume();
+    wodBeep(1000, 0.2); // start-bip
+    document.getElementById('wodStartBtn').textContent = 'Pause';
+    wodTimer = setInterval(tickWod, 1000);
+    updateWodDisplay();
+  }
+
+  function resetWod() {
+    clearInterval(wodTimer);
+    wodRunning = false;
+    wodElapsed = 0;
+    wodRoundsDone = 0;
+    document.getElementById('wodStartBtn').textContent = 'Start';
+    updateWodDisplay();
+  }
+
+  function finishWod() {
+    clearInterval(wodTimer);
+    wodRunning = false;
+    document.getElementById('wodStartBtn').textContent = 'Start';
+    document.getElementById('wodLabel').textContent = 'Færdig! 🏁';
+    showToast('WOD færdig — husk at gemme resultatet');
+  }
+
+  document.getElementById('wodLogBtn').addEventListener('click', async () => {
+    let result, detail;
+    const exStr = wodRoundExercises.map(e => `${e.reps}× ${e.name}`).join(', ');
+    if (wodFormat === 'amrap') {
+      result = `${wodRoundsDone} runder`;
+      detail = `AMRAP ${wodConfig.minutes} min · ${exStr}`;
+    } else if (wodFormat === 'emom') {
+      result = `${wodConfig.minutes} min gennemført`;
+      detail = `EMOM ${wodConfig.minutes} min · ${exStr}`;
+    } else {
+      result = fmtClock(wodElapsed);
+      detail = `For Time ${wodConfig.rounds} runder · ${exStr}`;
+    }
+    wodLog.unshift({
+      id: Date.now(),
+      date: new Date().toISOString().split('T')[0],
+      format: wodFormat.toUpperCase(),
+      result: result,
+      detail: detail,
+    });
+    await saveWodLog();
+    renderWodHistory();
+    showToast('Resultat gemt');
+  });
+
+  function renderWodHistory() {
+    const cont = document.getElementById('wodHistory');
+    if (wodLog.length === 0) {
+      cont.innerHTML = `<div class="empty-state" style="padding:20px"><div style="font-size:13px">Ingen WOD'er logget endnu</div></div>`;
+      return;
+    }
+    cont.innerHTML = wodLog.slice(0, 60).map(w => `
+      <div class="log-entry">
+        <div class="log-entry-header">
+          <div class="log-entry-date">${formatDate(w.date)}</div>
+          <div class="log-entry-type">${w.format}</div>
+        </div>
+        <div class="log-entry-stats" style="margin-top:4px">
+          <span><strong>${w.result}</strong></span>
+        </div>
+        <div class="log-entry-notes" style="font-style:normal">${w.detail}</div>
+        <div class="log-entry-actions">
+          <button class="icon-btn" data-wod-id="${w.id}">Slet</button>
+        </div>
+      </div>
+    `).join('');
+    cont.querySelectorAll('.icon-btn[data-wod-id]').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        if (!confirm('Slet denne WOD?')) return;
+        wodLog = wodLog.filter(w => w.id != btn.dataset.wodId);
+        await saveWodLog();
+        renderWodHistory();
+      });
+    });
+  }
+
+  function renderWodAll() {
+    renderWodConfig();
+    renderWodExTitle();
+    renderWodExList();
+    populateWodSelect();
+    updateWodDisplay();
+    renderWodHistory();
+  }
+
+  // WOD event-koblinger (kører én gang ved init)
+  function initWodControls() {
+    document.querySelectorAll('.wod-format-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.wod-format-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        wodFormat = btn.dataset.format;
+        resetWod();
+        renderWodConfig();
+        renderWodExTitle();
+        updateWodDisplay();
+      });
+    });
+    document.getElementById('wodStartBtn').addEventListener('click', startWod);
+    document.getElementById('wodResetBtn').addEventListener('click', resetWod);
+    document.getElementById('wodAddExBtn').addEventListener('click', () => {
+      const name = document.getElementById('wodExSelect').value;
+      const reps = parseInt(document.getElementById('wodExReps').value) || 10;
+      wodRoundExercises.push({ name, reps });
+      renderWodExList();
+    });
+  }
+
+  // ============================
   // TOAST
   // ============================
   document.getElementById('exportBtn').addEventListener('click', exportData);
@@ -2885,6 +3403,8 @@
     renderBackInputs();
     document.getElementById('yogaDate').valueAsDate = new Date();
     renderYogaExercises();
+    initWodControls();
+    renderWodAll();
     window.addEventListener('resize', () => {
       if (document.getElementById('panel-stats').classList.contains('active')) {
         renderCharts();
