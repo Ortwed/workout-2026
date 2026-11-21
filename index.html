@@ -1415,6 +1415,22 @@
   .log-tile .tile-label { display: flex; align-items: center; gap: 6px; }
   .tile-lock { display: inline-flex; align-items: center; font-size: 9px; font-weight: 500; letter-spacing: 0.6px; text-transform: uppercase; color: var(--clay); }
   .log-tile.locked .tile-lock { color: var(--forest); }
+  .weight-stats {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px 10px; margin: 4px 0 18px;
+    font-family: 'Outfit', system-ui, sans-serif;
+  }
+  .weight-stats:empty { display: none; }
+  .ws-val { font-size: 20px; font-weight: 400; line-height: 1.1; color: var(--ink); white-space: nowrap; }
+  .ws-val small { font-size: 11px; color: var(--ink-faint); }
+  .ws-label { font-size: 9px; font-weight: 500; letter-spacing: 0.8px; text-transform: uppercase; color: var(--ink-faint); margin-top: 4px; }
+  .stepper input.kg-input { width: 4.2ch; text-align: right; }
+  .weigh-tile { width: 100%; flex-direction: row; align-items: center; gap: 16px; padding: 14px 16px; }
+  .weigh-tile .num { min-width: 92px; }
+  .weigh-meta { display: flex; flex-direction: column; gap: 4px; }
+  .weigh-sub { font-size: 11px; color: var(--ink-faint); }
+  .weigh-tile.due { border-color: var(--forest); border-style: dashed; }
+  .weigh-tile.due .tile-label { color: var(--forest); }
+  .stepper .stepper-value small { align-self: flex-end; }
   .day-pick {
     display: flex; gap: 6px; overflow-x: auto; margin: -12px -24px 22px; padding: 0 24px 2px;
     scrollbar-width: none; -webkit-overflow-scrolling: touch;
@@ -1526,6 +1542,14 @@
         <button class="log-tile empty" data-metric="energy" type="button"><span class="num plus">+</span><span class="tile-label">Energi<span class="tile-lock"></span></span></button>
         <button class="log-tile empty" data-metric="restingHr" type="button"><span class="num plus">+</span><span class="tile-label">Hvilepuls<span class="tile-lock"></span></span></button>
       </div>
+    </section>
+
+    <section class="today-section">
+      <div class="section-head"><p class="eyebrow">Indvejning · mandag</p><span class="section-status" id="weighStatus"></span></div>
+      <button class="log-tile weigh-tile empty" id="weighTile" type="button">
+        <span class="num plus" id="weighNum">+</span>
+        <span class="weigh-meta"><span class="tile-label" id="weighLabel">Vej dig ind</span><span class="weigh-sub" id="weighSub"></span></span>
+      </button>
     </section>
 
     <article class="card workout-card">
@@ -1851,6 +1875,16 @@
     </div>
   </section>
 
+  <section class="panel" id="panel-weight">
+    <div class="section-title">Vægt</div>
+    <div class="back-intro">
+      <p>Én indvejning om ugen: mandag morgen, efter toilet og før morgenmad. Samme vægt, samme tøj (eller intet). Det er trenden over uger der tæller, ikke den enkelte måling.</p>
+    </div>
+    <button class="btn" id="weightLogBtn" type="button">Log ugens vægt</button>
+    <div class="section-title" style="margin-top:32px">Historik</div>
+    <div id="weightHistory"></div>
+  </section>
+
   <section class="panel" id="panel-history">
     <div class="section-title">Historik</div>
     <div id="historyList"></div>
@@ -1881,6 +1915,11 @@
     <div class="chart-container">
       <h3>Hvilepuls · morgen</h3>
       <canvas id="hrChart"></canvas>
+    </div>
+    <div class="chart-container">
+      <h3>Vægt · kg pr. uge</h3>
+      <div class="weight-stats" id="weightStats"></div>
+      <canvas id="weightChart"></canvas>
     </div>
 
     <div class="section-title" style="margin-top:32px">Intervalsessioner</div>
@@ -3155,10 +3194,10 @@
   // ============================
   // NAVIGATION — 5 faner + sub-nav under Plan og Log
   // ============================
-  const SUB_PANELS = ['daily', 'back', 'yoga', 'wod'];
+  const SUB_PANELS = ['daily', 'back', 'yoga', 'wod', 'weight'];
   const SUBNAV = {
     plan: [['plan', 'Program'], ['daily', 'Daglige'], ['back', 'Ryg'], ['yoga', 'Yoga'], ['wod', 'WOD']],
-    log:  [['log', 'Løb & styrke'], ['daily', 'Daglige'], ['back', 'Ryg'], ['yoga', 'Yoga'], ['wod', 'WOD']],
+    log:  [['log', 'Løb & styrke'], ['daily', 'Daglige'], ['back', 'Ryg'], ['yoga', 'Yoga'], ['wod', 'WOD'], ['weight', 'Vægt']],
   };
   let activeTab = 'today';
   let activePanel = 'today';
@@ -3198,6 +3237,7 @@
     if (panel === 'back') renderBackAll();
     if (panel === 'yoga') renderYogaAll();
     if (panel === 'wod') renderWodAll();
+    if (panel === 'weight') renderWeightPanel();
     window.scrollTo(0, 0);
   }
 
@@ -3248,6 +3288,32 @@
     Object.assign(rec, patch);
     return rec;
   }
+  function weeklyFor(weekStart) {
+    return weeklyMetrics.find(w => w.weekStart === weekStart) || null;
+  }
+  function upsertWeekly(weekStart, patch) {
+    let rec = weeklyFor(weekStart);
+    if (!rec) {
+      rec = { id: String(Date.now()), weekStart };
+      weeklyMetrics.push(rec);
+      weeklyMetrics.sort((a, b) => a.weekStart.localeCompare(b.weekStart));
+    }
+    Object.assign(rec, patch);
+    return rec;
+  }
+  function weightHistory() {
+    return weeklyMetrics.filter(w => isNum(w.weightKg)).sort((a, b) => a.weekStart.localeCompare(b.weekStart));
+  }
+  function lastWeightBefore(weekStart) {
+    const prev = weightHistory().filter(w => w.weekStart < weekStart);
+    return prev.length ? prev[prev.length - 1].weightKg : null;
+  }
+  function parseKg(raw) {
+    const n = parseFloat(String(raw).replace(',', '.'));
+    if (isNaN(n) || n < 30 || n > 250) return null;
+    return Math.round(n * 10) / 10;
+  }
+  const fmtSigned = (n) => (n > 0 ? '+' : n < 0 ? '−' : '±') + fmtDec(Math.abs(n));
   function metricsInRange(fromISO, toISO) {
     return dailyMetrics.filter(m => m.date >= fromISO && m.date <= toISO);
   }
@@ -3322,10 +3388,45 @@
     document.getElementById('wkStepsFill').style.width = Math.min(100, wk.stepsTotal / STEPS_WEEK_GOAL * 100) + '%';
     document.getElementById('wkStepsBar').setAttribute('aria-valuenow', wk.stepsTotal);
 
+    renderWeighTile(today);
     const allLocked = ['steps', 'sleep', 'energy', 'restingHr'].every(k => locked[k]);
     document.getElementById('morningLogStatus').innerHTML = allLocked ? `${LOCK_SVG} Låst` : '';
     renderTrainerCard();
   }
+
+  function renderWeighTile(today) {
+    const thisMon = mondayOf(today);
+    const rec = weeklyFor(thisMon);
+    const hist = weightHistory();
+    const tile = document.getElementById('weighTile');
+    const num = document.getElementById('weighNum');
+    const label = document.getElementById('weighLabel');
+    const sub = document.getElementById('weighSub');
+    const isMonday = today === thisMon;
+    const logged = rec && isNum(rec.weightKg);
+    tile.classList.toggle('empty', !logged && isMonday);
+    tile.classList.toggle('due', !logged && isMonday);
+    if (logged) {
+      num.classList.remove('plus');
+      num.innerHTML = `${fmtDec(rec.weightKg)}<small>kg</small>`;
+      const prev = lastWeightBefore(thisMon);
+      label.innerHTML = `Denne uge<span class="tile-lock">${rec.locked && rec.locked.weight ? LOCK_SVG : 'kladde'}</span>`;
+      sub.textContent = prev != null ? `${fmtSigned(rec.weightKg - prev)} kg siden sidst` : 'Første indvejning';
+    } else if (isMonday) {
+      num.classList.add('plus');
+      num.textContent = '+';
+      label.textContent = 'Vej dig ind';
+      sub.textContent = 'I dag · før morgenmad';
+    } else {
+      const last = hist[hist.length - 1];
+      num.classList.toggle('plus', !last);
+      num.innerHTML = last ? `${fmtDec(last.weightKg)}<small>kg</small>` : '–';
+      label.textContent = last ? `Sidst · ${shortDM(last.weekStart)}` : 'Ingen indvejning endnu';
+      sub.textContent = 'Ugens indvejning mangler · næste er mandag';
+    }
+    document.getElementById('weighStatus').innerHTML = logged && rec.locked && rec.locked.weight ? `${LOCK_SVG} Låst` : '';
+  }
+  document.getElementById('weighTile').addEventListener('click', () => openSheet('weight'));
 
   document.getElementById('logGrid').addEventListener('click', (e) => {
     const tile = e.target.closest('.log-tile');
@@ -3366,7 +3467,8 @@
   // søvn = natten efter dagen. locked = { steps, sleep, energy, restingHr } sættes ved Gem.
   const SLEEP_EMOJI = ['😴', '😑', '🙂', '😊', '💪'];
   const ENERGY_EMOJI = ['🪫', '😕', '😐', '🙂', '⚡'];
-  const SHEET_EYEBROW = { steps: 'Log skridt', sleep: 'Log søvn', energy: 'Log energi', restingHr: 'Log hvilepuls' };
+  const SHEET_EYEBROW = { steps: 'Log skridt', sleep: 'Log søvn', energy: 'Log energi', restingHr: 'Log hvilepuls', weight: 'Indvejning · mandag' };
+  const WEIGHT_WEEKS_BACK = 8;
   const BACKFILL_DAYS = 7;
   const LOCK_SVG = '<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>';
   let sheetType = null;
@@ -3380,6 +3482,11 @@
     return DAY_NAMES[new Date(iso + 'T12:00:00').getDay()];
   }
   function sheetTitle(type, iso) {
+    if (type === 'weight') {
+      const thisMon = mondayOf(localISO());
+      if (iso === thisMon) return localISO() === thisMon ? 'Hvad vejer du i morges?' : 'Ugens indvejning';
+      return `Indvejning mandag ${shortDM(iso)}`;
+    }
     const w = dayWord(iso);
     if (type === 'steps') return `Hvor mange skridt ${w}?`;
     if (type === 'sleep') return w === 'i går' ? 'Hvor godt sov du i nat?' : `Hvor godt sov du natten efter ${w}?`;
@@ -3389,10 +3496,18 @@
   function hasValue(m, type) {
     if (!m) return false;
     if (type === 'sleep') return isNum(m.sleepHours) || isNum(m.sleepScore);
+    if (type === 'weight') return isNum(m.weightKg);
     return isNum(m[type]);
   }
+  // Vægt ligger i weeklyMetrics (nøgle: mandag), resten i dailyMetrics (nøgle: dato)
+  function recFor(date, type = sheetType) {
+    return type === 'weight' ? weeklyFor(date) : metricsFor(date);
+  }
+  function upsertRec(date, patch) {
+    return sheetType === 'weight' ? upsertWeekly(date, patch) : upsertMetric(date, patch);
+  }
   function isLocked(date, type) {
-    const m = metricsFor(date);
+    const m = recFor(date, type);
     return !!(m && m.locked && m.locked[type]);
   }
 
@@ -3415,6 +3530,16 @@
   }
 
   function renderDayPick() {
+    if (sheetType === 'weight') {
+      const thisMon = mondayOf(localISO());
+      const weeks = Array.from({ length: WEIGHT_WEEKS_BACK }, (_, i) => addDaysISO(thisMon, -7 * i));
+      document.getElementById('sheetDays').innerHTML = weeks.map(w => {
+        const label = w === thisMon ? 'Denne uge' : `Uge ${parseInt(getISOWeek(new Date(w + 'T12:00:00')).split('-W')[1])}`;
+        const lock = isLocked(w, 'weight') ? ` ${LOCK_SVG}` : '';
+        return `<button type="button" data-day="${w}" class="${w === sheetDate ? 'active' : ''}">${label}${lock}</button>`;
+      }).join('');
+      return;
+    }
     const yest = yesterdayISO();
     const days = Array.from({ length: BACKFILL_DAYS }, (_, i) => addDaysISO(yest, -i));
     document.getElementById('sheetDays').innerHTML = days.map(d => {
@@ -3429,7 +3554,7 @@
     document.getElementById('sheetEyebrow').textContent = SHEET_EYEBROW[sheetType];
     document.getElementById('sheetTitle').textContent = sheetTitle(sheetType, sheetDate);
     renderDayPick();
-    const m = metricsFor(sheetDate) || {};
+    const m = recFor(sheetDate) || {};
     const body = document.getElementById('sheetBody');
     const ro = locked ? ' readonly' : '';
     if (sheetType === 'steps') {
@@ -3442,6 +3567,12 @@
         stepperHtml('Hvor mange timer?', `<output id="sheetOut">${fmtDec(hours)}</output><small>t</small>`, 'En halv time mindre', 'En halv time mere', locked);
     } else if (sheetType === 'energy') {
       body.innerHTML = scaleHtml(ENERGY_EMOJI, m.energy, 'Energi', locked);
+    } else if (sheetType === 'weight') {
+      const val = isNum(m.weightKg) ? fmtDec(m.weightKg) : '';
+      const ph = lastWeightBefore(sheetDate);
+      body.innerHTML = stepperHtml('Kg · ±0,1 — mandag morgen, før morgenmad',
+        `<input type="text" id="sheetNum" class="kg-input" inputmode="decimal" placeholder="${ph != null ? fmtDec(ph) : '80,0'}" value="${val}" aria-label="Vægt i kg"${ro}><small>kg</small>`,
+        '0,1 kg mindre', '0,1 kg mere', locked);
     } else if (sheetType === 'restingHr') {
       body.innerHTML = stepperHtml('Slag pr. minut',
         `<input type="number" id="sheetNum" inputmode="numeric" min="40" max="100" step="1" placeholder="55" value="${isNum(m.restingHr) ? m.restingHr : ''}" aria-label="Hvilepuls"${ro}>`,
@@ -3467,7 +3598,7 @@
   }
   function changeMetric(patch) {
     if (!canEdit()) return;
-    upsertMetric(sheetDate, patch);
+    upsertRec(sheetDate, patch);
     renderToday();
     setAutosave('pending');
     clearTimeout(sheetSaveTimer);
@@ -3484,7 +3615,7 @@
   function openSheet(type, date) {
     if (!SHEET_EYEBROW[type]) return;
     sheetType = type;
-    sheetDate = date || yesterdayISO();
+    sheetDate = date || (type === 'weight' ? mondayOf(localISO()) : yesterdayISO());
     sheetEditing = false;
     renderSheet();
     const sheet = document.getElementById('sheet');
@@ -3504,8 +3635,8 @@
 
   document.getElementById('sheetDim').addEventListener('click', closeSheet);
   document.getElementById('sheetDoneBtn').addEventListener('click', async () => {
-    if (canEdit() && hasValue(metricsFor(sheetDate), sheetType)) {
-      const rec = metricsFor(sheetDate);
+    if (canEdit() && hasValue(recFor(sheetDate), sheetType)) {
+      const rec = recFor(sheetDate);
       rec.locked = { ...(rec.locked || {}), [sheetType]: true };
       clearTimeout(sheetSaveTimer);
       sheetSaveTimer = null;
@@ -3525,8 +3656,8 @@
     if (!b || b.dataset.day === sheetDate) return;
     flushSheetSave();
     // En påbegyndt rettelse af en låst dag låses igen, før der skiftes dag
-    if (sheetEditing && hasValue(metricsFor(sheetDate), sheetType)) {
-      const rec = metricsFor(sheetDate);
+    if (sheetEditing && hasValue(recFor(sheetDate), sheetType)) {
+      const rec = recFor(sheetDate);
       rec.locked = { ...(rec.locked || {}), [sheetType]: true };
       cloudSave();
     }
@@ -3547,7 +3678,7 @@
       });
       if (sheetType === 'energy') changeMetric({ energy: v });
       if (sheetType === 'sleep') {
-        const cur = metricsFor(sheetDate);
+        const cur = recFor(sheetDate);
         changeMetric({ sleepScore: v, sleepHours: cur && isNum(cur.sleepHours) ? cur.sleepHours : 7.5 });
       }
       return;
@@ -3555,7 +3686,7 @@
     const stepBtn = e.target.closest('[data-step]');
     if (!stepBtn) return;
     const dir = parseInt(stepBtn.dataset.step);
-    const cur = metricsFor(sheetDate) || {};
+    const cur = recFor(sheetDate) || {};
     if (sheetType === 'steps') {
       const v = Math.max(0, Math.min(100000, (isNum(cur.steps) ? cur.steps : 0) + dir * 100));
       document.getElementById('sheetNum').value = v;
@@ -3564,6 +3695,11 @@
       const v = Math.max(4, Math.min(12, (isNum(cur.sleepHours) ? cur.sleepHours : 7.5) + dir * 0.5));
       document.getElementById('sheetOut').textContent = fmtDec(v);
       changeMetric({ sleepHours: v });
+    } else if (sheetType === 'weight') {
+      const base = isNum(cur.weightKg) ? cur.weightKg : (lastWeightBefore(sheetDate) ?? 80);
+      const v = Math.round(Math.max(30, Math.min(250, base + dir * 0.1)) * 10) / 10;
+      document.getElementById('sheetNum').value = fmtDec(v);
+      changeMetric({ weightKg: v });
     } else if (sheetType === 'restingHr') {
       const v = Math.max(40, Math.min(100, (isNum(cur.restingHr) ? cur.restingHr : 55) + dir));
       document.getElementById('sheetNum').value = v;
@@ -3574,6 +3710,11 @@
     if (e.target.id !== 'sheetNum' || !canEdit()) return;
     const raw = e.target.value;
     if (raw === '') return;
+    if (sheetType === 'weight') {
+      const kg = parseKg(raw);
+      if (kg != null) changeMetric({ weightKg: kg });
+      return;
+    }
     const n = parseInt(raw);
     if (isNaN(n)) return;
     if (sheetType === 'steps' && n >= 0 && n <= 100000) changeMetric({ steps: n });
@@ -3581,6 +3722,11 @@
   });
   document.getElementById('sheetBody').addEventListener('change', (e) => {
     if (e.target.id !== 'sheetNum' || !canEdit()) return;
+    if (sheetType === 'weight') {
+      const kg = parseKg(e.target.value);
+      if (kg != null) { e.target.value = fmtDec(kg); changeMetric({ weightKg: kg }); }
+      return;
+    }
     const n = parseInt(e.target.value);
     if (isNaN(n)) return;
     if (sheetType === 'steps') { const v = Math.max(0, Math.min(100000, n)); e.target.value = v; changeMetric({ steps: v }); }
@@ -3670,7 +3816,12 @@
       },
       lastTrainingDate: lastTraining,
       daysSinceLastTraining: daysSince,
-      latestWeekly: weeklyMetrics.slice(-2),
+      weighIn: {
+        note: 'Indvejning én gang om ugen, mandag morgen. weekStart er mandagens dato.',
+        isMonday: today === thisMon,
+        loggedThisWeek: !!(weeklyFor(thisMon) && isNum(weeklyFor(thisMon).weightKg)),
+        history: weightHistory().slice(-8).map(w => ({ weekStart: w.weekStart, kg: w.weightKg })),
+      },
       plannedToday: briefToday && briefToday.workoutTitle
         ? `${briefToday.workoutTitle}${briefToday.workoutDetail ? ', ' + briefToday.workoutDetail : ''}`
         : null,
@@ -3897,10 +4048,79 @@
     if (vals.length < 2) { drawEmpty(ctx, w, h, emptyMsg); return; }
     drawLineChart(ctx, w, h, vals, { ...opts, colors: FOREST_COLORS });
   }
+  function renderWeightPanel() {
+    const hist = weightHistory().slice().reverse();
+    const cont = document.getElementById('weightHistory');
+    if (!hist.length) {
+      cont.innerHTML = '<p class="empty-state" style="font-family:Inter,sans-serif;font-size:13px;color:var(--ink-faint);text-align:center;padding:20px 0">Ingen indvejninger endnu</p>';
+      return;
+    }
+    cont.innerHTML = hist.map((w, i) => {
+      const prev = hist[i + 1];
+      const wk = parseInt(getISOWeek(new Date(w.weekStart + 'T12:00:00')).split('-W')[1]);
+      const diff = prev ? `${fmtSigned(w.weightKg - prev.weightKg)} kg` : '';
+      return `<div class="log-entry">
+        <div class="log-entry-header">
+          <div><div class="log-entry-date">UGE ${wk} · ${fmtShortDate(w.weekStart + 'T12:00:00')}</div>
+          <div class="log-entry-type">${fmtDec(w.weightKg)} kg ${w.locked && w.locked.weight ? '' : '<span style="color:var(--clay);font-size:11px">· kladde</span>'}</div></div>
+          <div style="font-family:Inter,sans-serif;font-size:13px;color:var(--ink-soft)">${diff}</div>
+        </div>
+        <div class="log-entry-actions"><button class="icon-btn" data-weight-week="${w.weekStart}">Ret</button></div>
+      </div>`;
+    }).join('');
+  }
+  document.getElementById('weightLogBtn').addEventListener('click', () => openSheet('weight'));
+  document.getElementById('weightHistory').addEventListener('click', (e) => {
+    const b = e.target.closest('[data-weight-week]');
+    if (b) openSheet('weight', b.dataset.weightWeek);
+  });
+
+  function renderWeightStats() {
+    const el = document.getElementById('weightStats');
+    if (!el) return;
+    const hist = weightHistory();
+    if (!hist.length) { el.innerHTML = ''; return; }
+    const cur = hist[hist.length - 1];
+    const weeksBetween = (a, b) => Math.round((new Date(b + 'T12:00:00') - new Date(a + 'T12:00:00')) / (7 * 86400000));
+    // Ændring mod seneste måling der ligger mindst N uger før den nyeste
+    const changeOver = (n) => {
+      const ref = hist.slice().reverse().find(w => weeksBetween(w.weekStart, cur.weekStart) >= n);
+      return ref ? cur.weightKg - ref.weightKg : null;
+    };
+    // Trend: lineær regression på (uger, kg) → kg pr. uge
+    let slope = null;
+    if (hist.length >= 3) {
+      const xs = hist.map(w => weeksBetween(hist[0].weekStart, w.weekStart));
+      const ys = hist.map(w => w.weightKg);
+      const mx = avg(xs), my = avg(ys);
+      const den = xs.reduce((sum, x) => sum + (x - mx) ** 2, 0);
+      if (den > 0) slope = xs.reduce((sum, x, i) => sum + (x - mx) * (ys[i] - my), 0) / den;
+    }
+    const vals = hist.map(w => w.weightKg);
+    const cell = (value, label) => `<div><div class="ws-val">${value}</div><div class="ws-label">${label}</div></div>`;
+    const kg = (n) => n == null ? '–' : `${fmtSigned(n)}<small> kg</small>`;
+    el.innerHTML = [
+      cell(`${fmtDec(cur.weightKg)}<small> kg</small>`, 'Nu'),
+      cell(kg(changeOver(4)), '4 uger'),
+      cell(kg(changeOver(12)), '12 uger'),
+      cell(hist.length > 1 ? kg(cur.weightKg - hist[0].weightKg) : '–', `Siden ${shortDM(hist[0].weekStart)}`),
+      cell(slope == null ? '–' : `${fmtSigned(Math.round(slope * 100) / 100)}<small> kg/uge</small>`, 'Trend'),
+      cell(`${fmtDec(Math.min(...vals))}–${fmtDec(Math.max(...vals))}<small> kg</small>`, 'Lav–høj'),
+    ].join('');
+  }
+
   function drawMetricCharts() {
     drawStepsChart();
     drawMetricLine('sleepChart', 'sleepHours', 'Log søvn mindst 2 nætter for at se trend', { min: 4, max: 12 });
     drawMetricLine('hrChart', 'restingHr', 'Log hvilepuls mindst 2 dage for at se trend', {});
+    renderWeightStats();
+    const wc = document.getElementById('weightChart');
+    if (wc) {
+      const { ctx, w, h } = setupCanvas(wc);
+      const vals = weightHistory().slice(-26).map(x => x.weightKg);
+      if (vals.length < 2) drawEmpty(ctx, w, h, 'Vej dig ind to mandage for at se trend');
+      else drawLineChart(ctx, w, h, vals, { min: Math.floor(Math.min(...vals) - 1), max: Math.ceil(Math.max(...vals) + 1), colors: FOREST_COLORS });
+    }
   }
 
   // ============================
