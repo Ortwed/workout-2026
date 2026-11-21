@@ -1,0 +1,14 @@
+name = "majoren"
+main = "src/index.ts"
+compatibility_date = "2026-11-01"
+compatibility_flags = ["nodejs_compat"]
+
+[vars]
+FIREBASE_PROJECT_ID = "coach-ortwed"
+ALLOWED_ORIGIN = "https://ortwed.github.io"
+# Valgfrit men anbefalet: din egen Firebase-UID, så kun du kan bruge Majoren.
+# Find den i Firebase Console → Authentication → Users → User UID.
+ALLOWED_UIDS = ""
+
+# Secret (sættes med `wrangler secret put ANTHROPIC_API_KEY`, ikke her):
+# ANTHROPIC_API_KEY
