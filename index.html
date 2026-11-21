@@ -2,11 +2,12 @@
 <html lang="da">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Halvmarathon — Træningsplan</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#F5F2EC">
+<title>Træningslogbog</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..500;1,9..144,300..450&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..500;1,9..144,300..450&family=Inter:wght@400;500;600&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
   :root {
     --paper: #F5F2EC;
@@ -1074,6 +1075,346 @@
     color: var(--ink-faint);
     margin-top: 8px;
   }
+
+  /* =========================================================
+     NYE SKÆRME — "I dag", chat med Majoren, quick-log sheets
+     Outfit-font, scoped under .ns så de gamle paneler er urørte
+     ========================================================= */
+  :root {
+    --r-card: 14px;
+    --r-sheet: 22px;
+    --r-pill: 100px;
+    --shadow-fab: 0 6px 18px rgba(42, 46, 42, 0.22);
+    --shadow-sheet: 0 -10px 30px rgba(42, 46, 42, 0.18);
+    --shadow-selected: 0 5px 14px rgba(74, 96, 73, 0.3);
+    --nav-h: 64px;
+    --safe-b: env(safe-area-inset-bottom, 0px);
+  }
+  .ns { font-family: 'Outfit', system-ui, sans-serif; color: var(--ink); line-height: 1.45; }
+  .ns button, .ns input, .ns output { font-family: inherit; }
+  .ns .eyebrow {
+    font-size: 11px; font-weight: 500; letter-spacing: 2px;
+    text-transform: uppercase; color: var(--forest); margin: 0;
+  }
+  .ns .card {
+    background: var(--paper-card); border: 1px solid var(--line);
+    border-radius: var(--r-card); padding: 18px;
+  }
+  .ns .num { font-weight: 400; font-size: 26px; line-height: 1; color: var(--ink); }
+  .ns .num.small { font-size: 20px; }
+  .ns .num small { font-size: 0.55em; color: var(--ink-faint); margin-left: 1px; }
+  .ns .num.plus { font-weight: 300; color: var(--ink-faint); }
+
+  /* Greeting */
+  .today-greeting { margin-top: 2px; }
+  .today-greeting h1 {
+    font-weight: 300; font-size: 38px; line-height: 1.05; letter-spacing: -0.8px;
+    margin: 8px 0 0; color: var(--ink);
+  }
+  .today-greeting h1 span { color: var(--forest); }
+
+  /* Stat chips */
+  .stat-row { display: flex; gap: 8px; margin-top: 22px; }
+  .stat-chip {
+    flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 7px;
+    padding: 12px 10px; background: var(--paper-card);
+    border: 1px solid var(--line); border-radius: var(--r-card);
+  }
+  .stat-chip .num { font-size: 22px; }
+  .stat-chip .label {
+    font-size: 10px; font-weight: 500; letter-spacing: 1px;
+    text-transform: uppercase; color: var(--ink-faint);
+  }
+
+  /* Trainer card */
+  .trainer-card { margin-top: 18px; }
+  .trainer-card header { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+  .avatar {
+    width: 30px; height: 30px; border-radius: 50%; flex-shrink: 0;
+    background: var(--sage-light); color: var(--forest-deep);
+    font-weight: 500; font-size: 14px;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .trainer-body { margin: 0; font-size: 15px; line-height: 1.5; white-space: pre-line; }
+  .trainer-body.muted { color: var(--ink-soft); }
+  .trainer-card footer {
+    margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--line);
+    display: flex; justify-content: space-between; align-items: center; gap: 12px;
+  }
+  .link-btn {
+    background: none; border: none; padding: 6px 0; cursor: pointer;
+    color: var(--forest); font-weight: 500; font-size: 13px;
+  }
+  .link-btn.soft { color: var(--ink-faint); font-weight: 400; font-size: 12px; }
+  .link-btn:disabled { opacity: 0.5; cursor: default; }
+
+  /* Log i dag */
+  .today-section { margin-top: 22px; }
+  .today-section > .eyebrow { margin-bottom: 10px; }
+  .log-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .log-tile {
+    display: flex; flex-direction: column; align-items: flex-start; gap: 6px;
+    padding: 13px 14px; min-height: 66px; background: var(--paper-card);
+    border: 1px solid var(--line); border-radius: var(--r-card);
+    cursor: pointer; text-align: left; color: var(--ink);
+    transition: border-color 0.15s, transform 0.1s;
+  }
+  .log-tile:active { transform: scale(0.98); }
+  .log-tile:hover { border-color: var(--sage); }
+  .log-tile.empty { background: var(--paper-sunk); border: 1px dashed var(--line-strong); }
+  .log-tile .tile-label { font-size: 11px; font-weight: 500; color: var(--ink-soft); }
+
+  /* Dagens træning */
+  .workout-card { margin-top: 20px; }
+  .workout-card h2 {
+    font-weight: 400; font-size: 22px; letter-spacing: -0.3px; line-height: 1.15;
+    margin: 8px 0 5px; color: var(--ink);
+  }
+  .workout-card p { font-size: 13px; color: var(--ink-soft); margin: 0; }
+  .btn-outline {
+    background: transparent; border: 1px solid var(--forest);
+    color: var(--forest); font-weight: 500; font-size: 12px;
+    letter-spacing: 0.3px; padding: 9px 18px; margin-top: 14px;
+    border-radius: var(--r-pill); cursor: pointer;
+  }
+  .btn-outline:hover { background: var(--forest); color: var(--paper); }
+
+  /* Denne uge */
+  .week-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 18px; }
+  .micro-label {
+    font-size: 9px; font-weight: 500; letter-spacing: 0.8px;
+    text-transform: uppercase; color: var(--ink-faint); margin-top: 5px;
+  }
+  .progress-head {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: 7px; font-size: 11px; color: var(--ink-soft);
+  }
+  .progress { height: 2px; background: var(--line); border-radius: 2px; overflow: hidden; }
+  .progress-fill { height: 100%; background: var(--forest); transition: width 0.4s ease; }
+
+  /* FAB */
+  .fab {
+    position: fixed; z-index: 90;
+    bottom: calc(var(--nav-h) + var(--safe-b) + 18px);
+    right: max(20px, calc((100vw - 680px) / 2 + 20px));
+    width: 56px; height: 56px; border-radius: 50%;
+    background: var(--forest); border: none; color: var(--paper);
+    box-shadow: var(--shadow-fab); cursor: pointer;
+    display: none; align-items: center; justify-content: center;
+  }
+  body[data-tab="today"] .fab { display: flex; }
+  .fab:active { transform: scale(0.96); }
+
+  /* ---------- Navigation: bund på mobil, top på desktop ---------- */
+  nav button .nav-ico { display: none; }
+  .subnav {
+    display: flex; gap: 6px; overflow-x: auto; margin: -8px 0 24px;
+    padding-bottom: 2px; -webkit-overflow-scrolling: touch; scrollbar-width: none;
+  }
+  .subnav::-webkit-scrollbar { display: none; }
+  .subnav[hidden] { display: none; }
+  .subnav button {
+    flex-shrink: 0; background: var(--paper-card); border: 1px solid var(--line);
+    color: var(--ink-soft); font-family: 'Inter', sans-serif; font-weight: 500; font-size: 12px;
+    padding: 7px 14px; border-radius: var(--r-pill); cursor: pointer;
+  }
+  .subnav button.active { background: var(--forest); border-color: var(--forest); color: var(--paper); }
+
+  /* Hero (halvmarathon-statistik) hører til Plan-fanen */
+  body:not([data-tab="plan"]) .hero { display: none; }
+
+  @media (max-width: 719px) {
+    nav {
+      position: fixed; top: auto; bottom: 0; left: 0; right: 0;
+      height: calc(var(--nav-h) + var(--safe-b));
+      padding: 0 4px var(--safe-b);
+      display: flex; justify-content: space-around; align-items: stretch;
+      background: var(--paper-card); backdrop-filter: none;
+      border-top: 1px solid var(--line); border-bottom: none;
+      overflow: visible;
+    }
+    nav button {
+      flex: 1; margin: 0; padding: 8px 0 6px;
+      display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px;
+      font-size: 10px; font-weight: 500; color: var(--ink-faint);
+      font-family: 'Outfit', system-ui, sans-serif; letter-spacing: 0;
+    }
+    nav button::after { display: none; }
+    nav button .nav-ico { display: block; width: 22px; height: 22px; }
+    nav button.active { color: var(--forest); font-weight: 600; }
+    main { padding-bottom: calc(var(--nav-h) + var(--safe-b) + 96px); }
+    .toast { bottom: calc(var(--nav-h) + var(--safe-b) + 16px); }
+  }
+  @media (min-width: 720px) {
+    .fab { bottom: 28px; }
+    .subnav { margin-top: -12px; }
+  }
+
+  /* ---------- Chat med Majoren ---------- */
+  .overlay-root[hidden] { display: none !important; }
+  .chat-screen {
+    position: fixed; inset: 0; z-index: 1500; background: var(--paper);
+    display: flex; justify-content: center;
+  }
+  .chat-inner {
+    width: 100%; max-width: 680px; height: 100%; height: 100dvh;
+    display: flex; flex-direction: column; background: var(--paper);
+  }
+  @media (min-width: 720px) {
+    .chat-inner { border-left: 1px solid var(--line); border-right: 1px solid var(--line); }
+  }
+  .chat-header {
+    display: flex; align-items: center; padding: calc(10px + env(safe-area-inset-top, 0px)) 12px 12px;
+    border-bottom: 1px solid var(--line); flex-shrink: 0;
+  }
+  .chat-header .icon-round {
+    width: 40px; height: 40px; border-radius: 50%; background: none; border: none;
+    font-size: 20px; color: var(--ink-soft); cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .chat-header .title {
+    flex: 1; display: flex; align-items: center; justify-content: center;
+    gap: 8px; font-weight: 500; font-size: 18px; letter-spacing: -0.2px;
+  }
+  .status-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--sage); }
+  .status-dot.off { background: var(--line-strong); }
+  .messages {
+    flex: 1; overflow-y: auto; display: flex; flex-direction: column;
+    padding: 20px 18px 10px; gap: 16px; -webkit-overflow-scrolling: touch;
+  }
+  .messages > :first-child { margin-top: auto; }
+  .msg { display: flex; flex-direction: column; }
+  .msg.from-trainer { align-self: flex-start; max-width: 85%; }
+  .msg.from-me { align-self: flex-end; max-width: 80%; }
+  .bubble {
+    padding: 11px 14px; font-size: 14.5px; line-height: 1.45;
+    white-space: pre-wrap; overflow-wrap: anywhere;
+  }
+  .msg.from-trainer .bubble {
+    background: var(--paper-card); border: 1px solid var(--line);
+    border-radius: 16px 16px 16px 4px; color: var(--ink);
+  }
+  .msg.from-me .bubble {
+    background: var(--forest); color: var(--paper);
+    border-radius: 16px 16px 4px 16px;
+  }
+  .msg time { display: block; font-size: 10px; color: var(--ink-faint); margin-top: 5px; padding: 0 8px; }
+  .msg.from-me time { text-align: right; }
+  .msg-day {
+    align-self: center; font-size: 10px; font-weight: 500; letter-spacing: 1.2px;
+    text-transform: uppercase; color: var(--ink-faint);
+  }
+  .typing { display: inline-flex; gap: 4px; align-items: center; height: 20px; }
+  .typing span {
+    width: 6px; height: 6px; border-radius: 50%; background: var(--ink-faint);
+    animation: typing 1.2s infinite ease-in-out;
+  }
+  .typing span:nth-child(2) { animation-delay: 0.15s; }
+  .typing span:nth-child(3) { animation-delay: 0.3s; }
+  @keyframes typing { 0%, 60%, 100% { opacity: 0.25; transform: translateY(0); } 30% { opacity: 1; transform: translateY(-3px); } }
+  .composer {
+    padding: 12px 18px calc(14px + var(--safe-b)); background: var(--paper-card);
+    border-top: 1px solid var(--line); flex-shrink: 0;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .composer input {
+    flex: 1; width: auto; background: var(--paper); border: 1px solid var(--line);
+    border-radius: var(--r-pill); padding: 11px 18px;
+    font-size: 16px; color: var(--ink); outline: none; box-shadow: none;
+  }
+  .composer input:focus { border-color: var(--sage); box-shadow: none; }
+  .composer input::placeholder { color: var(--ink-faint); }
+  .composer button {
+    width: 42px; height: 42px; border-radius: 50%; background: var(--forest);
+    border: none; color: var(--paper); cursor: pointer; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .composer button:disabled { opacity: 0.45; cursor: default; }
+
+  /* ---------- Quick-log bottom sheet ---------- */
+  .sheet-overlay { position: fixed; inset: 0; z-index: 1600; }
+  .sheet-dim { position: absolute; inset: 0; background: rgba(42, 46, 42, 0.42); animation: dimIn 0.2s ease; }
+  @keyframes dimIn { from { opacity: 0; } to { opacity: 1; } }
+  .sheet {
+    position: absolute; left: 0; right: 0; bottom: 0;
+    width: 100%; max-width: 680px; margin: 0 auto;
+    background: var(--paper);
+    border-radius: var(--r-sheet) var(--r-sheet) 0 0;
+    padding: 0 24px calc(24px + var(--safe-b));
+    box-shadow: var(--shadow-sheet);
+    max-height: 92dvh; overflow-y: auto;
+    animation: sheetUp 0.25s cubic-bezier(0.2, 0.9, 0.3, 1);
+  }
+  .sheet.dragging { transition: none; }
+  .sheet.settling { transition: transform 0.2s ease; }
+  @keyframes sheetUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+  .handle-zone { padding: 12px 0 20px; cursor: grab; touch-action: none; }
+  .handle { width: 40px; height: 4px; background: var(--line-strong); border-radius: 2px; margin: 0 auto; }
+  .sheet h2 {
+    font-weight: 300; font-size: 28px; line-height: 1.1; letter-spacing: -0.5px;
+    margin: 10px 0 26px; color: var(--ink);
+  }
+  .scale { display: flex; justify-content: space-between; align-items: flex-start; gap: 6px; margin-bottom: 28px; }
+  .scale-btn {
+    flex: 1; display: flex; flex-direction: column; align-items: center; gap: 8px;
+    background: none; border: none; padding: 0; cursor: pointer; min-height: 60px;
+  }
+  .scale-btn .emoji {
+    width: 52px; height: 52px; border-radius: 50%;
+    background: var(--paper-card); border: 1px solid var(--line);
+    font-size: 24px; display: flex; align-items: center; justify-content: center;
+    transition: all 120ms ease;
+  }
+  .scale-btn .score { font-size: 13px; color: var(--ink-faint); }
+  .scale-btn.selected .emoji {
+    width: 56px; height: 56px; background: var(--forest);
+    border: 2px solid var(--paper-card);
+    box-shadow: var(--shadow-selected); margin-top: -2px;
+  }
+  .scale-btn.selected .score { color: var(--forest); font-weight: 600; }
+  .stepper-block { margin-bottom: 20px; }
+  .stepper-label { font-size: 13px; color: var(--ink-soft); margin: 0 0 12px; }
+  .stepper {
+    display: flex; align-items: center; justify-content: space-between; gap: 10px;
+    background: var(--paper-card); border: 1px solid var(--line);
+    border-radius: var(--r-card); padding: 14px 18px;
+  }
+  .stepper button {
+    width: 44px; height: 44px; border-radius: 50%; flex-shrink: 0;
+    background: var(--paper); border: 1px solid var(--line);
+    color: var(--ink-soft); font-weight: 500; font-size: 22px; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .stepper button:active { background: var(--paper-sunk); }
+  .stepper .stepper-value { display: flex; align-items: baseline; justify-content: center; min-width: 0; flex: 1; }
+  .stepper input, .stepper output {
+    font-size: 42px; font-weight: 400; color: var(--ink); line-height: 1;
+    text-align: center; background: none; border: none; padding: 0;
+    width: 100%; min-width: 0; box-shadow: none; border-radius: 0;
+    -moz-appearance: textfield;
+  }
+  .stepper input:focus { outline: none; box-shadow: none; }
+  .stepper input::-webkit-outer-spin-button,
+  .stepper input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+  .stepper input::placeholder { color: var(--line-strong); }
+  .stepper small { font-size: 20px; color: var(--ink-faint); margin-left: 4px; }
+  .autosave {
+    font-size: 11px; color: var(--ink-faint); margin: 0 0 20px;
+    display: flex; align-items: center; gap: 6px; min-height: 16px;
+  }
+  .stepper output { width: auto; }
+  /* Skjult toast må ikke titte frem over bundnavigationen */
+  .toast { opacity: 0; visibility: hidden; transition: transform 0.3s cubic-bezier(0.2, 0.9, 0.3, 1), opacity 0.2s, visibility 0.3s; }
+  .toast.show { opacity: 1; visibility: visible; }
+  @media (min-width: 720px) {
+    nav { padding-left: max(16px, calc((100vw - 680px) / 2 + 20px)); }
+  }
+  .btn-primary {
+    width: 100%; background: var(--forest); color: var(--paper);
+    border: none; font-weight: 500; font-size: 15px;
+    letter-spacing: 0.3px; padding: 16px; border-radius: var(--r-card);
+    cursor: pointer;
+  }
 </style>
 </head>
 <body>
@@ -1118,19 +1459,75 @@
   </div>
 </header>
 
-<nav>
-  <button class="active" data-panel="plan">Plan</button>
-  <button data-panel="daily">Daglige øvelser</button>
-  <button data-panel="back">Rygøvelser</button>
-  <button data-panel="yoga">Yoga</button>
-  <button data-panel="wod">WOD</button>
-  <button data-panel="log">Log træning</button>
-  <button data-panel="history">Historik</button>
-  <button data-panel="stats">Udvikling</button>
+<nav id="mainNav" aria-label="Hovedmenu">
+  <button class="active" aria-current="page" data-tab="today"><svg class="nav-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2.5v2M12 19.5v2M2.5 12h2M19.5 12h2M5.3 5.3l1.4 1.4M17.3 17.3l1.4 1.4M5.3 18.7l1.4-1.4M17.3 6.7l1.4-1.4"/></svg><span>I dag</span></button>
+  <button data-tab="plan"><svg class="nav-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15.5" rx="2.5"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg><span>Plan</span></button>
+  <button data-tab="log"><svg class="nav-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M12 8v8M8 12h8"/></svg><span>Log</span></button>
+  <button data-tab="history"><svg class="nav-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 12a8.5 8.5 0 1 0 2.5-6"/><path d="M3.5 4v4h4M12 7.5V12l3 2"/></svg><span>Historik</span></button>
+  <button data-tab="stats"><svg class="nav-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 19.5h16"/><path d="M6.5 16l4-5 3.5 3 4.5-6.5"/></svg><span>Udvikling</span></button>
 </nav>
 
 <main>
-  <section class="panel active" id="panel-plan">
+  <div class="subnav" id="subnav" hidden></div>
+
+  <section class="panel active ns" id="panel-today">
+    <section class="today-greeting">
+      <p class="eyebrow" id="todayEyebrow">&nbsp;</p>
+      <h1 id="todayGreeting">God<span>morgen</span>,<br>Christian</h1>
+    </section>
+
+    <section class="stat-row">
+      <div class="stat-chip"><span class="num" id="chipSteps">–</span><span class="label">Skridt</span></div>
+      <div class="stat-chip"><span class="num" id="chipSleep">–</span><span class="label">Søvn</span></div>
+      <div class="stat-chip"><span class="num" id="chipHr">–</span><span class="label">Hvilepuls</span></div>
+    </section>
+
+    <article class="card trainer-card">
+      <header>
+        <div class="avatar" aria-hidden="true">M</div>
+        <p class="eyebrow">Majoren</p>
+      </header>
+      <p class="trainer-body muted" id="trainerBody">…</p>
+      <footer>
+        <button class="link-btn soft" id="briefRefreshBtn" type="button">↻ Ny brief</button>
+        <button class="link-btn" id="briefReplyBtn" type="button">Svar →</button>
+      </footer>
+    </article>
+
+    <section class="today-section">
+      <p class="eyebrow">Log i dag</p>
+      <div class="log-grid" id="logGrid">
+        <button class="log-tile empty" data-metric="steps" type="button"><span class="num plus">+</span><span class="tile-label">Skridt</span></button>
+        <button class="log-tile empty" data-metric="sleep" type="button"><span class="num plus">+</span><span class="tile-label">Søvn</span></button>
+        <button class="log-tile empty" data-metric="energy" type="button"><span class="num plus">+</span><span class="tile-label">Energi</span></button>
+        <button class="log-tile empty" data-metric="restingHr" type="button"><span class="num plus">+</span><span class="tile-label">Hvilepuls</span></button>
+      </div>
+    </section>
+
+    <article class="card workout-card">
+      <p class="eyebrow">På programmet</p>
+      <h2 id="workoutTitle">Afventer ordre</h2>
+      <p id="workoutDetail">Majoren lægger dagens program med morgen-briefen.</p>
+      <button class="btn-outline" id="todayLogBtn" type="button">Log træning</button>
+    </article>
+
+    <section class="today-section">
+      <p class="eyebrow" style="margin-bottom:12px">Denne uge</p>
+      <div class="week-stats">
+        <div><div class="num small" id="wkKm">0<small>km</small></div><div class="micro-label">Løb</div></div>
+        <div><div class="num small" id="wkStrength">0</div><div class="micro-label">Styrke</div></div>
+        <div><div class="num small" id="wkSteps">–</div><div class="micro-label">Skridt</div></div>
+        <div><div class="num small" id="wkSleep">–</div><div class="micro-label">Søvn</div></div>
+      </div>
+      <div class="progress-head">
+        <span>Skridt-mål</span>
+        <span id="wkStepsGoal">0 / 49.000</span>
+      </div>
+      <div class="progress" role="progressbar" aria-label="Skridt denne uge" aria-valuemin="0" aria-valuemax="49000" id="wkStepsBar"><div class="progress-fill" id="wkStepsFill" style="width:0%"></div></div>
+    </section>
+  </section>
+
+  <section class="panel" id="panel-plan">
     <div class="legend">
       <div class="legend-item"><span class="legend-dot" style="background:var(--red)"></span>Aktuel</div>
       <div class="legend-item"><span class="legend-dot" style="background:var(--success)"></span>Fuldført</div>
@@ -1449,6 +1846,18 @@
       <h3>Følelse efter session</h3>
       <canvas id="feelChart"></canvas>
     </div>
+    <div class="chart-container">
+      <h3>Skridt pr. dag · seneste 14 dage</h3>
+      <canvas id="stepsChart"></canvas>
+    </div>
+    <div class="chart-container">
+      <h3>Søvn · timer pr. nat</h3>
+      <canvas id="sleepChart"></canvas>
+    </div>
+    <div class="chart-container">
+      <h3>Hvilepuls · morgen</h3>
+      <canvas id="hrChart"></canvas>
+    </div>
 
     <div class="section-title" style="margin-top:32px">Intervalsessioner</div>
     <div id="intervalSummaries"></div>
@@ -1468,6 +1877,39 @@
 
 <div class="toast" id="toast"></div>
 
+<button class="fab" id="chatFab" type="button" aria-label="Chat med Majoren">
+  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.5 11.5a8 8 0 0 1-11.6 7.1L4 20l1.4-4.6A8 8 0 1 1 20.5 11.5z"/></svg>
+</button>
+
+<section class="chat-screen ns overlay-root" id="chatScreen" role="dialog" aria-modal="true" aria-labelledby="chatTitle" hidden>
+  <div class="chat-inner">
+    <header class="chat-header">
+      <button class="icon-round" id="chatBackBtn" type="button" aria-label="Tilbage">←</button>
+      <div class="title"><span id="chatTitle">Majoren</span><span class="status-dot" id="chatStatusDot"></span></div>
+      <span style="width:40px" aria-hidden="true"></span>
+    </header>
+    <div class="messages" id="chatMessages" aria-live="polite"></div>
+    <form class="composer" id="chatForm" autocomplete="off">
+      <input type="text" id="chatInput" placeholder="Spørg Majoren…" aria-label="Besked til Majoren" enterkeyhint="send" maxlength="2000">
+      <button type="submit" id="chatSendBtn" aria-label="Send">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 19V5M5.5 11.5L12 5l6.5 6.5"/></svg>
+      </button>
+    </form>
+  </div>
+</section>
+
+<div class="sheet-overlay ns overlay-root" id="sheetOverlay" role="dialog" aria-modal="true" aria-labelledby="sheetTitle" hidden>
+  <div class="sheet-dim" id="sheetDim" aria-hidden="true"></div>
+  <div class="sheet" id="sheet">
+    <div class="handle-zone" id="sheetHandle"><div class="handle"></div></div>
+    <p class="eyebrow" id="sheetEyebrow"></p>
+    <h2 id="sheetTitle"></h2>
+    <div id="sheetBody"></div>
+    <p class="autosave" id="sheetAutosave"></p>
+    <button class="btn-primary" id="sheetDoneBtn" type="button">Gem</button>
+  </div>
+</div>
+
 <script type="module">
   // ============================
   // FIREBASE
@@ -1486,6 +1928,9 @@
     messagingSenderId: "1091836185627",
     appId: "1:1091836185627:web:65bc828a4a2da6b8743cbe"
   };
+
+  // Majorens Cloudflare Worker. Sæt URL'en efter `wrangler deploy` (se majoren-worker/README.md).
+  const MAJOREN_URL = 'https://majoren.REPLACE-ME.workers.dev';
 
   const fbApp = initializeApp(firebaseConfig);
   const auth = getAuth(fbApp);
@@ -1940,6 +2385,7 @@
         renderDailyAll();
         renderCharts();
         renderIntervalSummaries();
+        renderToday();
         showToast('Backup gendannet');
       } catch (err) {
         showToast('Kunne ikke læse filen');
@@ -2514,6 +2960,7 @@
     drawPaceChart();
     drawKmChart();
     drawFeelChart();
+    drawMetricCharts();
   }
 
   function setupCanvas(canvas) {
@@ -2577,13 +3024,14 @@
   }
 
   function drawLineChart(ctx, w, h, values, opts = {}) {
+    const C = opts.colors || { top: '#E94560', bottom: '#8B1A2B', dot: '#D7263D', grid: 'rgba(215, 38, 61, 0.08)', fill: 'rgba(215, 38, 61, ' };
     const padding = { l: 40, r: 16, t: 16, b: 24 };
     const cw = w - padding.l - padding.r;
     const ch = h - padding.t - padding.b;
     const min = opts.min !== undefined ? opts.min : Math.min(...values) * 0.95;
     const max = opts.max !== undefined ? opts.max : Math.max(...values) * 1.05;
 
-    ctx.strokeStyle = 'rgba(215, 38, 61, 0.08)';
+    ctx.strokeStyle = C.grid;
     ctx.lineWidth = 1;
     for (let i = 0; i <= 4; i++) {
       const y = padding.t + (ch / 4) * i;
@@ -2599,8 +3047,8 @@
     }
 
     const grad = ctx.createLinearGradient(0, padding.t, 0, padding.t + ch);
-    grad.addColorStop(0, '#E94560');
-    grad.addColorStop(1, '#8B1A2B');
+    grad.addColorStop(0, C.top);
+    grad.addColorStop(1, C.bottom);
     ctx.strokeStyle = grad;
     ctx.lineWidth = 2.5;
     ctx.beginPath();
@@ -2615,12 +3063,12 @@
     ctx.lineTo(padding.l, padding.t + ch);
     ctx.closePath();
     const fillGrad = ctx.createLinearGradient(0, padding.t, 0, padding.t + ch);
-    fillGrad.addColorStop(0, 'rgba(215, 38, 61, 0.15)');
-    fillGrad.addColorStop(1, 'rgba(215, 38, 61, 0.02)');
+    fillGrad.addColorStop(0, C.fill + '0.15)');
+    fillGrad.addColorStop(1, C.fill + '0.02)');
     ctx.fillStyle = fillGrad;
     ctx.fill();
 
-    ctx.fillStyle = '#D7263D';
+    ctx.fillStyle = C.dot;
     values.forEach((v, i) => {
       const x = padding.l + (cw / Math.max(values.length - 1, 1)) * i;
       const norm = (v - min) / (max - min);
@@ -2629,7 +3077,8 @@
     });
   }
 
-  function drawBarChart(ctx, w, h, values, labels) {
+  function drawBarChart(ctx, w, h, values, labels, opts = {}) {
+    const C = opts.colors || { top: '#E94560', bottom: '#8B1A2B', grid: 'rgba(215, 38, 61, 0.08)' };
     const padding = { l: 40, r: 16, t: 16, b: 32 };
     const cw = w - padding.l - padding.r;
     const ch = h - padding.t - padding.b;
@@ -2637,7 +3086,7 @@
     const barW = cw / values.length * 0.7;
     const gap = cw / values.length * 0.3;
 
-    ctx.strokeStyle = 'rgba(215, 38, 61, 0.08)';
+    ctx.strokeStyle = C.grid;
     for (let i = 0; i <= 4; i++) {
       const y = padding.t + (ch / 4) * i;
       ctx.beginPath(); ctx.moveTo(padding.l, y); ctx.lineTo(w - padding.r, y); ctx.stroke();
@@ -2655,8 +3104,8 @@
       const barH = (v / max) * ch;
       const y = padding.t + ch - barH;
       const barGrad = ctx.createLinearGradient(0, y, 0, padding.t + ch);
-      barGrad.addColorStop(0, '#E94560');
-      barGrad.addColorStop(1, '#8B1A2B');
+      barGrad.addColorStop(0, C.top);
+      barGrad.addColorStop(1, C.bottom);
       ctx.fillStyle = barGrad;
       ctx.fillRect(x, y, barW, barH);
     });
@@ -2675,29 +3124,668 @@
     ctx.fillText(msg, w / 2, h / 2);
   }
 
-  document.querySelectorAll('nav button').forEach(btn => {
-    btn.addEventListener('click', () => {
-      document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
-      document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
-      btn.classList.add('active');
-      document.getElementById('panel-' + btn.dataset.panel).classList.add('active');
-      if (btn.dataset.panel === 'stats') {
-        setTimeout(() => { renderCharts(); renderIntervalSummaries(); }, 50);
-      }
-      if (btn.dataset.panel === 'daily') {
-        renderDailyAll();
-      }
-      if (btn.dataset.panel === 'back') {
-        renderBackAll();
-      }
-      if (btn.dataset.panel === 'yoga') {
-        renderYogaAll();
-      }
-      if (btn.dataset.panel === 'wod') {
-        renderWodAll();
-      }
+  // ============================
+  // NAVIGATION — 5 faner + sub-nav under Plan og Log
+  // ============================
+  const SUB_PANELS = ['daily', 'back', 'yoga', 'wod'];
+  const SUBNAV = {
+    plan: [['plan', 'Program'], ['daily', 'Daglige'], ['back', 'Ryg'], ['yoga', 'Yoga'], ['wod', 'WOD']],
+    log:  [['log', 'Løb & styrke'], ['daily', 'Daglige'], ['back', 'Ryg'], ['yoga', 'Yoga'], ['wod', 'WOD']],
+  };
+  let activeTab = 'today';
+  let activePanel = 'today';
+
+  function showPanel(panel, tab) {
+    if (!tab) {
+      tab = SUB_PANELS.includes(panel)
+        ? (activeTab === 'plan' || activeTab === 'log' ? activeTab : 'log')
+        : panel;
+    }
+    activeTab = tab;
+    activePanel = panel;
+    document.body.dataset.tab = tab;
+
+    document.querySelectorAll('#mainNav button').forEach(b => {
+      const on = b.dataset.tab === tab;
+      b.classList.toggle('active', on);
+      if (on) b.setAttribute('aria-current', 'page'); else b.removeAttribute('aria-current');
     });
+    document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+    document.getElementById('panel-' + panel).classList.add('active');
+
+    const sub = document.getElementById('subnav');
+    if (SUBNAV[tab]) {
+      sub.hidden = false;
+      sub.innerHTML = SUBNAV[tab].map(([p, label]) =>
+        `<button type="button" data-panel="${p}" class="${p === panel ? 'active' : ''}">${label}</button>`
+      ).join('');
+    } else {
+      sub.hidden = true;
+      sub.innerHTML = '';
+    }
+
+    if (panel === 'today') renderToday();
+    if (panel === 'stats') setTimeout(() => { renderCharts(); renderIntervalSummaries(); }, 50);
+    if (panel === 'daily') renderDailyAll();
+    if (panel === 'back') renderBackAll();
+    if (panel === 'yoga') renderYogaAll();
+    if (panel === 'wod') renderWodAll();
+    window.scrollTo(0, 0);
+  }
+
+  document.querySelectorAll('#mainNav button').forEach(btn => {
+    btn.addEventListener('click', () => showPanel(btn.dataset.tab, btn.dataset.tab));
   });
+  document.getElementById('subnav').addEventListener('click', (e) => {
+    const b = e.target.closest('button[data-panel]');
+    if (b) showPanel(b.dataset.panel, activeTab);
+  });
+
+  // ============================
+  // DATO-HJÆLPERE (lokal tid, YYYY-MM-DD)
+  // ============================
+  function localISO(d = new Date()) {
+    const z = new Date(d.getTime() - d.getTimezoneOffset() * 60000);
+    return z.toISOString().slice(0, 10);
+  }
+  function addDaysISO(iso, n) {
+    const d = new Date(iso + 'T12:00:00');
+    d.setDate(d.getDate() + n);
+    return localISO(d);
+  }
+  function mondayOf(iso) {
+    const d = new Date(iso + 'T12:00:00');
+    d.setDate(d.getDate() - ((d.getDay() + 6) % 7));
+    return localISO(d);
+  }
+  const fmtInt = (n) => Math.round(n).toLocaleString('da-DK');
+  const fmtDec = (n) => (Math.round(n * 10) / 10).toLocaleString('da-DK', { maximumFractionDigits: 1 });
+  const avg = (arr) => arr.length ? arr.reduce((a, b) => a + b, 0) / arr.length : null;
+  const isNum = (v) => typeof v === 'number' && !isNaN(v);
+
+  // ============================
+  // DAGSMÅLINGER (dailyMetrics)
+  // ============================
+  function metricsFor(date) {
+    return dailyMetrics.find(m => m.date === date) || null;
+  }
+  function upsertMetric(date, patch) {
+    let rec = metricsFor(date);
+    if (!rec) {
+      rec = { id: String(Date.now()), date };
+      dailyMetrics.push(rec);
+      dailyMetrics.sort((a, b) => a.date.localeCompare(b.date));
+    }
+    Object.assign(rec, patch);
+    return rec;
+  }
+  function metricsInRange(fromISO, toISO) {
+    return dailyMetrics.filter(m => m.date >= fromISO && m.date <= toISO);
+  }
+
+  function weekSummary(mondayISO) {
+    const sunday = addDaysISO(mondayISO, 6);
+    const inWeek = (d) => d && d >= mondayISO && d <= sunday;
+    const weekEntries = entries.filter(e => inWeek(e.date));
+    const km = weekEntries.reduce((s, e) => s + (entryTotalKm(e) || 0), 0);
+    const strength = weekEntries.filter(e => e.type === 'fullbody').length
+                   + wodLog.filter(w => inWeek(w.date)).length;
+    const mets = metricsInRange(mondayISO, sunday);
+    const steps = mets.map(m => m.steps).filter(isNum);
+    const sleep = mets.map(m => m.sleepHours).filter(isNum);
+    return {
+      kmThisWeek: Math.round(km * 10) / 10,
+      strengthThisWeek: strength,
+      avgSteps: steps.length ? Math.round(avg(steps)) : null,
+      avgSleep: sleep.length ? Math.round(avg(sleep) * 10) / 10 : null,
+      stepsTotal: steps.reduce((a, b) => a + b, 0),
+      runs: weekEntries.filter(e => e.type !== 'fullbody').length,
+    };
+  }
+
+  // ============================
+  // "I DAG"-FANEN
+  // ============================
+  const DAY_NAMES = ['søndag', 'mandag', 'tirsdag', 'onsdag', 'torsdag', 'fredag', 'lørdag'];
+  const STEPS_WEEK_GOAL = 49000; // 7.000 × 7
+
+  function renderToday() {
+    const now = new Date();
+    const today = localISO(now);
+    const week = getISOWeek(now).split('-W')[1];
+    document.getElementById('todayEyebrow').textContent = `${DAY_NAMES[now.getDay()]} · uge ${parseInt(week)}`;
+    const h = now.getHours();
+    const part = h < 10 ? 'morgen' : h < 18 ? 'dag' : 'aften';
+    document.getElementById('todayGreeting').innerHTML = `God<span>${part}</span>,<br>Christian`;
+
+    const m = metricsFor(today) || {};
+    document.getElementById('chipSteps').innerHTML = isNum(m.steps) ? fmtInt(m.steps) : '–';
+    document.getElementById('chipSleep').innerHTML = isNum(m.sleepHours) ? `${fmtDec(m.sleepHours)}<small>t</small>` : '–';
+    document.getElementById('chipHr').innerHTML = isNum(m.restingHr) ? String(m.restingHr) : '–';
+
+    const tiles = {
+      steps: isNum(m.steps) ? fmtInt(m.steps) : null,
+      sleep: isNum(m.sleepHours) ? `${fmtDec(m.sleepHours)}<small>t</small>`
+           : isNum(m.sleepScore) ? `${m.sleepScore}<small>/5</small>` : null,
+      energy: isNum(m.energy) ? `${m.energy}<small>/5</small>` : null,
+      restingHr: isNum(m.restingHr) ? String(m.restingHr) : null,
+    };
+    document.querySelectorAll('#logGrid .log-tile').forEach(tile => {
+      const v = tiles[tile.dataset.metric];
+      tile.classList.toggle('empty', v == null);
+      tile.classList.toggle('logged', v != null);
+      const num = tile.querySelector('.num');
+      num.classList.toggle('plus', v == null);
+      num.innerHTML = v == null ? '+' : v;
+    });
+
+    const wk = weekSummary(mondayOf(today));
+    document.getElementById('wkKm').innerHTML = `${fmtDec(wk.kmThisWeek)}<small>km</small>`;
+    document.getElementById('wkStrength').textContent = wk.strengthThisWeek;
+    document.getElementById('wkSteps').textContent = wk.avgSteps != null ? fmtInt(wk.avgSteps) : '–';
+    document.getElementById('wkSleep').innerHTML = wk.avgSleep != null ? `${fmtDec(wk.avgSleep)}<small>t</small>` : '–';
+    document.getElementById('wkStepsGoal').textContent = `${fmtInt(wk.stepsTotal)} / ${fmtInt(STEPS_WEEK_GOAL)}`;
+    document.getElementById('wkStepsFill').style.width = Math.min(100, wk.stepsTotal / STEPS_WEEK_GOAL * 100) + '%';
+    document.getElementById('wkStepsBar').setAttribute('aria-valuenow', wk.stepsTotal);
+
+    renderTrainerCard();
+  }
+
+  document.getElementById('logGrid').addEventListener('click', (e) => {
+    const tile = e.target.closest('.log-tile');
+    if (tile) openSheet(tile.dataset.metric);
+  });
+  document.getElementById('todayLogBtn').addEventListener('click', () => showPanel('log', 'log'));
+  document.getElementById('briefReplyBtn').addEventListener('click', openChat);
+  document.getElementById('briefRefreshBtn').addEventListener('click', () => generateBrief(true));
+  document.getElementById('chatFab').addEventListener('click', openChat);
+
+  // ============================
+  // OVERLAYS — Tilbage-knap på telefonen lukker chat/sheet
+  // ============================
+  const overlayStack = [];
+  function pushOverlay(name, closeFn) {
+    overlayStack.push({ name, closeFn });
+    try { history.pushState({ overlay: name }, ''); } catch (e) {}
+  }
+  function popOverlay(name) {
+    const top = overlayStack[overlayStack.length - 1];
+    if (!top || top.name !== name) return;
+    overlayStack.pop();
+    top.closeFn();
+    if (history.state && history.state.overlay === name) history.back();
+  }
+  window.addEventListener('popstate', () => {
+    const top = overlayStack.pop();
+    if (top) top.closeFn();
+  });
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && overlayStack.length) popOverlay(overlayStack[overlayStack.length - 1].name);
+  });
+
+  // ============================
+  // QUICK-LOG BOTTOM SHEETS
+  // ============================
+  const SLEEP_EMOJI = ['😴', '😑', '🙂', '😊', '💪'];
+  const ENERGY_EMOJI = ['🪫', '😕', '😐', '🙂', '⚡'];
+  const SHEETS = {
+    steps:     { eyebrow: 'Log skridt',    title: 'Hvor mange skridt?' },
+    sleep:     { eyebrow: 'Log søvn',      title: 'Hvor godt sov du?' },
+    energy:    { eyebrow: 'Log energi',    title: 'Hvordan er energien?' },
+    restingHr: { eyebrow: 'Log hvilepuls', title: 'Hvilepuls i morges?' },
+  };
+  let sheetType = null;
+  let sheetDate = null;
+  let sheetSaveTimer = null;
+
+  function scaleHtml(emojis, selected, name) {
+    return `<div class="scale" role="radiogroup" aria-label="${name}">` + emojis.map((em, i) => {
+      const v = i + 1, on = selected === v;
+      return `<button type="button" class="scale-btn${on ? ' selected' : ''}" data-value="${v}" role="radio" aria-checked="${on}" aria-label="${name} ${v} af 5">
+        <span class="emoji">${em}</span><span class="score">${v}</span></button>`;
+    }).join('') + '</div>';
+  }
+  function stepperHtml(label, valueHtml, minusLabel, plusLabel) {
+    return `<div class="stepper-block">
+      <p class="stepper-label">${label}</p>
+      <div class="stepper">
+        <button type="button" data-step="-1" aria-label="${minusLabel}">−</button>
+        <div class="stepper-value">${valueHtml}</div>
+        <button type="button" data-step="1" aria-label="${plusLabel}">+</button>
+      </div></div>`;
+  }
+
+  function renderSheetBody() {
+    const m = metricsFor(sheetDate) || {};
+    const body = document.getElementById('sheetBody');
+    if (sheetType === 'steps') {
+      body.innerHTML = stepperHtml('Skridt i dag · ±100',
+        `<input type="number" id="sheetNum" inputmode="numeric" min="0" max="100000" step="100" placeholder="0" value="${isNum(m.steps) ? m.steps : ''}" aria-label="Antal skridt">`,
+        '100 skridt færre', '100 skridt flere');
+    } else if (sheetType === 'sleep') {
+      const hours = isNum(m.sleepHours) ? m.sleepHours : 7.5;
+      body.innerHTML = scaleHtml(SLEEP_EMOJI, m.sleepScore, 'Søvnkvalitet') +
+        stepperHtml('Hvor mange timer?', `<output id="sheetOut">${fmtDec(hours)}</output><small>t</small>`, 'En halv time mindre', 'En halv time mere');
+    } else if (sheetType === 'energy') {
+      body.innerHTML = scaleHtml(ENERGY_EMOJI, m.energy, 'Energi');
+    } else if (sheetType === 'restingHr') {
+      body.innerHTML = stepperHtml('Slag pr. minut',
+        `<input type="number" id="sheetNum" inputmode="numeric" min="40" max="100" step="1" placeholder="55" value="${isNum(m.restingHr) ? m.restingHr : ''}" aria-label="Hvilepuls">`,
+        'Et slag mindre', 'Et slag mere');
+    }
+  }
+
+  function setAutosave(state) {
+    const el = document.getElementById('sheetAutosave');
+    el.textContent = state === 'pending' ? 'Gemmer…' : state === 'saved' ? '✓ Automatisk gemt' : 'Gemmes automatisk';
+  }
+
+  function changeMetric(patch) {
+    upsertMetric(sheetDate, patch);
+    renderToday();
+    setAutosave('pending');
+    clearTimeout(sheetSaveTimer);
+    sheetSaveTimer = setTimeout(flushSheetSave, 500);
+  }
+  async function flushSheetSave() {
+    if (!sheetSaveTimer) return;
+    clearTimeout(sheetSaveTimer);
+    sheetSaveTimer = null;
+    await cloudSave();
+    if (sheetType) setAutosave('saved');
+  }
+
+  function openSheet(type) {
+    if (!SHEETS[type]) return;
+    sheetType = type;
+    sheetDate = localISO();
+    document.getElementById('sheetEyebrow').textContent = SHEETS[type].eyebrow;
+    document.getElementById('sheetTitle').textContent = SHEETS[type].title;
+    renderSheetBody();
+    setAutosave(metricsFor(sheetDate) ? 'saved' : 'idle');
+    const sheet = document.getElementById('sheet');
+    sheet.style.transform = '';
+    document.getElementById('sheetOverlay').hidden = false;
+    document.body.style.overflow = 'hidden';
+    pushOverlay('sheet', hideSheet);
+  }
+  function hideSheet() {
+    flushSheetSave();
+    document.getElementById('sheetOverlay').hidden = true;
+    document.body.style.overflow = '';
+    sheetType = null;
+  }
+  const closeSheet = () => popOverlay('sheet');
+
+  document.getElementById('sheetDim').addEventListener('click', closeSheet);
+  document.getElementById('sheetDoneBtn').addEventListener('click', closeSheet);
+
+  document.getElementById('sheetBody').addEventListener('click', (e) => {
+    const scaleBtn = e.target.closest('.scale-btn');
+    if (scaleBtn) {
+      const v = parseInt(scaleBtn.dataset.value);
+      scaleBtn.parentElement.querySelectorAll('.scale-btn').forEach(b => {
+        const on = b === scaleBtn;
+        b.classList.toggle('selected', on);
+        b.setAttribute('aria-checked', on);
+      });
+      if (sheetType === 'energy') changeMetric({ energy: v });
+      if (sheetType === 'sleep') {
+        const cur = metricsFor(sheetDate);
+        changeMetric({ sleepScore: v, sleepHours: cur && isNum(cur.sleepHours) ? cur.sleepHours : 7.5 });
+      }
+      return;
+    }
+    const stepBtn = e.target.closest('[data-step]');
+    if (!stepBtn) return;
+    const dir = parseInt(stepBtn.dataset.step);
+    const cur = metricsFor(sheetDate) || {};
+    if (sheetType === 'steps') {
+      const v = Math.max(0, Math.min(100000, (isNum(cur.steps) ? cur.steps : 0) + dir * 100));
+      document.getElementById('sheetNum').value = v;
+      changeMetric({ steps: v });
+    } else if (sheetType === 'sleep') {
+      const v = Math.max(4, Math.min(12, (isNum(cur.sleepHours) ? cur.sleepHours : 7.5) + dir * 0.5));
+      document.getElementById('sheetOut').textContent = fmtDec(v);
+      changeMetric({ sleepHours: v });
+    } else if (sheetType === 'restingHr') {
+      const v = Math.max(40, Math.min(100, (isNum(cur.restingHr) ? cur.restingHr : 55) + dir));
+      document.getElementById('sheetNum').value = v;
+      changeMetric({ restingHr: v });
+    }
+  });
+  document.getElementById('sheetBody').addEventListener('input', (e) => {
+    if (e.target.id !== 'sheetNum') return;
+    const raw = e.target.value;
+    if (raw === '') return;
+    const n = parseInt(raw);
+    if (isNaN(n)) return;
+    if (sheetType === 'steps' && n >= 0 && n <= 100000) changeMetric({ steps: n });
+    if (sheetType === 'restingHr' && n >= 40 && n <= 100) changeMetric({ restingHr: n });
+  });
+  document.getElementById('sheetBody').addEventListener('change', (e) => {
+    if (e.target.id !== 'sheetNum') return;
+    const n = parseInt(e.target.value);
+    if (isNaN(n)) return;
+    if (sheetType === 'steps') { const v = Math.max(0, Math.min(100000, n)); e.target.value = v; changeMetric({ steps: v }); }
+    if (sheetType === 'restingHr') { const v = Math.max(40, Math.min(100, n)); e.target.value = v; changeMetric({ restingHr: v }); }
+  });
+
+  // Swipe ned på håndtaget lukker
+  (function initSheetDrag() {
+    const handle = document.getElementById('sheetHandle');
+    const sheet = document.getElementById('sheet');
+    let startY = null, dy = 0;
+    handle.addEventListener('pointerdown', (e) => {
+      startY = e.clientY; dy = 0;
+      sheet.classList.add('dragging');
+      handle.setPointerCapture(e.pointerId);
+    });
+    handle.addEventListener('pointermove', (e) => {
+      if (startY == null) return;
+      dy = Math.max(0, e.clientY - startY);
+      sheet.style.transform = `translateY(${dy}px)`;
+    });
+    const end = () => {
+      if (startY == null) return;
+      startY = null;
+      sheet.classList.remove('dragging');
+      if (dy > 80) { closeSheet(); return; }
+      sheet.classList.add('settling');
+      sheet.style.transform = '';
+      setTimeout(() => sheet.classList.remove('settling'), 220);
+    };
+    handle.addEventListener('pointerup', end);
+    handle.addEventListener('pointercancel', end);
+  })();
+
+  // ============================
+  // MAJOREN — kontekst, chat og morgen-brief
+  // ============================
+  function compactEntry(e) {
+    const km = entryTotalKm(e);
+    const sec = entryTotalSec(e);
+    const out = { date: e.date, type: typeLabels[e.type] || e.type };
+    if (km) out.km = Math.round(km * 100) / 100;
+    if (sec) out.min = Math.round(sec / 60);
+    if (e.feel) out.feel = Number(e.feel);
+    if (e.hr) out.avgHr = Number(e.hr);
+    if (e.notes) out.notes = String(e.notes).slice(0, 200);
+    return out;
+  }
+
+  function buildMajorenContext() {
+    const now = new Date();
+    const today = localISO(now);
+    const from = addDaysISO(today, -6);
+    const inLast7 = (d) => d && d >= from && d <= today;
+    const thisMon = mondayOf(today);
+    const last = weekSummary(addDaysISO(thisMon, -7));
+    const cur = weekSummary(thisMon);
+    const allTraining = [
+      ...entries.map(e => e.date), ...dailyLog.map(d => d.date), ...backLog.map(b => b.date),
+      ...yogaLog.map(y => y.date), ...wodLog.map(w => w.date),
+    ].filter(Boolean).filter(d => d <= today).sort();
+    const lastTraining = allTraining[allTraining.length - 1] || null;
+    const daysSince = lastTraining
+      ? Math.round((new Date(today + 'T12:00:00') - new Date(lastTraining + 'T12:00:00')) / 86400000)
+      : null;
+    const briefToday = trainerBrief && trainerBrief.date === today ? trainerBrief : null;
+    return {
+      today,
+      weekday: DAY_NAMES[now.getDay()],
+      timeNow: now.toTimeString().slice(0, 5),
+      recentMetrics: metricsInRange(from, today).map(({ id, ...rest }) => rest),
+      recentWorkouts: entries.filter(e => inLast7(e.date)).map(compactEntry),
+      otherTraining: {
+        morgenrutine: dailyLog.filter(d => inLast7(d.date)).map(d => ({ date: d.date, reps: d.reps })),
+        rygoevelser: backLog.filter(b => inLast7(b.date)).map(b => b.date),
+        yoga: yogaLog.filter(y => inLast7(y.date)).map(y => y.date),
+        wod: wodLog.filter(w => inLast7(w.date)).map(w => ({ date: w.date, format: w.format, result: w.result })),
+      },
+      weekSummary: {
+        kmThisWeek: cur.kmThisWeek, strengthThisWeek: cur.strengthThisWeek,
+        avgSteps: cur.avgSteps, avgSleep: cur.avgSleep, runsThisWeek: cur.runs,
+      },
+      lastWeekSummary: {
+        km: last.kmThisWeek, strength: last.strengthThisWeek, runs: last.runs,
+        avgSteps: last.avgSteps, avgSleep: last.avgSleep,
+      },
+      lastTrainingDate: lastTraining,
+      daysSinceLastTraining: daysSince,
+      latestWeekly: weeklyMetrics.slice(-2),
+      plannedToday: briefToday && briefToday.workoutTitle
+        ? `${briefToday.workoutTitle}${briefToday.workoutDetail ? ', ' + briefToday.workoutDetail : ''}`
+        : null,
+    };
+  }
+
+  const majorenConfigured = () => !MAJOREN_URL.includes('REPLACE-ME');
+
+  async function callMajoren(path, payload) {
+    if (!majorenConfigured()) throw new Error('not_configured');
+    const idToken = await currentUser.getIdToken();
+    const res = await fetch(MAJOREN_URL.replace(/\/$/, '') + path, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ idToken, ...payload, context: buildMajorenContext() }),
+    });
+    if (!res.ok) throw new Error('http_' + res.status);
+    return res.json();
+  }
+
+  // ----- Morgen-brief -----
+  let briefState = 'idle'; // idle | loading | error
+  let briefAutoTried = false;
+
+  function renderTrainerCard() {
+    const today = localISO();
+    const el = document.getElementById('trainerBody');
+    const refresh = document.getElementById('briefRefreshBtn');
+    const fresh = trainerBrief && trainerBrief.date === today;
+    refresh.disabled = briefState === 'loading';
+    el.classList.toggle('muted', !fresh || briefState === 'loading');
+
+    if (briefState === 'loading') {
+      el.textContent = 'Majoren skriver dagens orientering…';
+    } else if (fresh) {
+      el.textContent = trainerBrief.body;
+    } else if (!majorenConfigured()) {
+      el.textContent = 'Majoren er ikke på post endnu. Worker’en mangler at blive deployet.';
+    } else if (briefState === 'error') {
+      el.textContent = 'Ingen forbindelse til Majoren. Tryk “Ny brief” for at prøve igen.';
+    } else if (new Date().getHours() < 6) {
+      el.textContent = 'Majoren melder klar kl. 0600.';
+    } else {
+      el.textContent = '…';
+    }
+
+    const wt = document.getElementById('workoutTitle');
+    const wd = document.getElementById('workoutDetail');
+    if (fresh && trainerBrief.workoutTitle) {
+      wt.textContent = trainerBrief.workoutTitle;
+      wd.textContent = trainerBrief.workoutDetail || '';
+    } else {
+      wt.textContent = 'Afventer ordre';
+      wd.textContent = 'Majoren lægger dagens program med morgen-briefen.';
+    }
+  }
+
+  async function generateBrief(force = false) {
+    if (!dataLoaded || briefState === 'loading') return;
+    const today = localISO();
+    if (!force && trainerBrief && trainerBrief.date === today) return;
+    if (!majorenConfigured()) { renderTrainerCard(); return; }
+    briefState = 'loading';
+    renderTrainerCard();
+    try {
+      const data = await callMajoren('/brief', {});
+      if (!data || !data.body) throw new Error('empty');
+      trainerBrief = {
+        date: today,
+        body: data.body,
+        workoutTitle: data.workout && data.workout.title || '',
+        workoutDetail: data.workout && data.workout.detail || '',
+        generatedAt: Date.now(),
+      };
+      briefState = 'idle';
+      await cloudSave();
+    } catch (e) {
+      briefState = 'error';
+    }
+    renderTrainerCard();
+  }
+
+  // Første åbning efter kl. 06:00 henter dagens brief. Ellers bruges den cachede.
+  function maybeAutoBrief() {
+    if (briefAutoTried) return;
+    const today = localISO();
+    if (trainerBrief && trainerBrief.date === today) return;
+    if (new Date().getHours() < 6) return;
+    briefAutoTried = true;
+    generateBrief(false);
+  }
+
+  // ----- Chat -----
+  let chatPending = false;
+  let chatPendingText = null;
+
+  function fmtClockHM(ts) {
+    const d = new Date(ts);
+    return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+  }
+  function dayLabel(ts) {
+    const iso = localISO(new Date(ts));
+    const today = localISO();
+    if (iso === today) return 'I dag';
+    if (iso === addDaysISO(today, -1)) return 'I går';
+    return fmtShortDate(iso + 'T12:00:00');
+  }
+  function msgNode(role, text, ts) {
+    const wrap = document.createElement('div');
+    wrap.className = 'msg ' + (role === 'user' ? 'from-me' : 'from-trainer');
+    const bubble = document.createElement('div');
+    bubble.className = 'bubble';
+    bubble.textContent = text;
+    wrap.appendChild(bubble);
+    if (ts) {
+      const t = document.createElement('time');
+      t.textContent = fmtClockHM(ts);
+      wrap.appendChild(t);
+    }
+    return wrap;
+  }
+
+  function renderChat() {
+    const box = document.getElementById('chatMessages');
+    box.innerHTML = '';
+    document.getElementById('chatStatusDot').classList.toggle('off', !majorenConfigured());
+    if (chatHistory.length === 0) {
+      box.appendChild(msgNode('majoren', majorenConfigured()
+        ? 'Melder klar. Hvad er situationen?'
+        : 'Majoren er ikke på post endnu. Worker’en mangler at blive deployet.', null));
+    }
+    let lastDay = null;
+    chatHistory.forEach(m => {
+      const day = dayLabel(m.ts);
+      if (day !== lastDay) {
+        const sep = document.createElement('div');
+        sep.className = 'msg-day';
+        sep.textContent = day;
+        box.appendChild(sep);
+        lastDay = day;
+      }
+      box.appendChild(msgNode(m.role, m.content, m.ts));
+    });
+    if (chatPendingText) {
+      box.appendChild(msgNode('user', chatPendingText, Date.now()));
+      const typing = document.createElement('div');
+      typing.className = 'msg from-trainer';
+      typing.innerHTML = '<div class="bubble"><span class="typing" aria-label="Majoren skriver"><span></span><span></span><span></span></span></div>';
+      box.appendChild(typing);
+    }
+    box.scrollTop = box.scrollHeight;
+  }
+
+  function openChat() {
+    renderChat();
+    document.getElementById('chatScreen').hidden = false;
+    document.body.style.overflow = 'hidden';
+    pushOverlay('chat', hideChat);
+    const box = document.getElementById('chatMessages');
+    requestAnimationFrame(() => { box.scrollTop = box.scrollHeight; });
+    // Fokusér ikke automatisk på mobil — tastaturet ville dække samtalen
+    if (window.matchMedia('(min-width: 720px)').matches) document.getElementById('chatInput').focus();
+  }
+  function hideChat() {
+    document.getElementById('chatScreen').hidden = true;
+    document.body.style.overflow = '';
+  }
+  document.getElementById('chatBackBtn').addEventListener('click', () => popOverlay('chat'));
+
+  document.getElementById('chatForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const input = document.getElementById('chatInput');
+    const text = input.value.trim();
+    if (!text || chatPending) return;
+    if (!majorenConfigured()) { showToast('Majoren er ikke deployet endnu'); return; }
+    chatPending = true;
+    chatPendingText = text;
+    input.value = '';
+    document.getElementById('chatSendBtn').disabled = true;
+    renderChat();
+
+    const history = chatHistory.slice(-10).map(m => ({
+      role: m.role === 'user' ? 'user' : 'assistant',
+      content: m.content,
+    }));
+    try {
+      const data = await callMajoren('/chat', { message: text, history });
+      if (!data || !data.reply) throw new Error('empty');
+      const ts = Date.now();
+      chatHistory.push({ id: String(ts), ts, role: 'user', content: text });
+      chatHistory.push({ id: String(ts + 1), ts: ts + 1, role: 'majoren', content: data.reply });
+      if (chatHistory.length > CHAT_HISTORY_MAX) chatHistory = chatHistory.slice(-CHAT_HISTORY_MAX);
+      cloudSave();
+    } catch (err) {
+      input.value = text; // giv beskeden tilbage, så den kan sendes igen
+      showToast(err.message === 'http_429' ? 'Majoren er optaget — prøv om lidt' : 'Ingen forbindelse til Majoren');
+    }
+    chatPending = false;
+    chatPendingText = null;
+    document.getElementById('chatSendBtn').disabled = false;
+    renderChat();
+  });
+
+  // ============================
+  // NYE GRAFER — skridt, søvn, hvilepuls
+  // ============================
+  const FOREST_COLORS = { top: '#4A6049', bottom: '#384937', dot: '#4A6049', grid: 'rgba(74, 96, 73, 0.10)', fill: 'rgba(74, 96, 73, ' };
+  const shortDM = (iso) => { const [, mm, dd] = iso.split('-'); return `${parseInt(dd)}/${parseInt(mm)}`; };
+
+  function drawStepsChart() {
+    const canvas = document.getElementById('stepsChart');
+    if (!canvas) return;
+    const { ctx, w, h } = setupCanvas(canvas);
+    const today = localISO();
+    const days = Array.from({ length: 14 }, (_, i) => addDaysISO(today, i - 13));
+    const vals = days.map(d => { const m = metricsFor(d); return m && isNum(m.steps) ? m.steps : 0; });
+    if (!vals.some(v => v > 0)) { drawEmpty(ctx, w, h, 'Log skridt på “I dag” for at se trend'); return; }
+    drawBarChart(ctx, w, h, vals, days.map((d, i) => i % 2 === 1 ? shortDM(d) : ''), { colors: FOREST_COLORS });
+  }
+  function drawMetricLine(canvasId, field, emptyMsg, opts) {
+    const canvas = document.getElementById(canvasId);
+    if (!canvas) return;
+    const { ctx, w, h } = setupCanvas(canvas);
+    const vals = dailyMetrics.filter(m => isNum(m[field])).slice(-30).map(m => m[field]);
+    if (vals.length < 2) { drawEmpty(ctx, w, h, emptyMsg); return; }
+    drawLineChart(ctx, w, h, vals, { ...opts, colors: FOREST_COLORS });
+  }
+  function drawMetricCharts() {
+    drawStepsChart();
+    drawMetricLine('sleepChart', 'sleepHours', 'Log søvn mindst 2 nætter for at se trend', { min: 4, max: 12 });
+    drawMetricLine('hrChart', 'restingHr', 'Log hvilepuls mindst 2 dage for at se trend', {});
+  }
 
   // ============================
   // DAGLIGE ØVELSER
@@ -3432,6 +4520,16 @@
     renderYogaExercises();
     initWodControls();
     renderWodAll();
+    showPanel('today', 'today');
+    maybeAutoBrief();
+    // Står appen åben natten over, hentes ny brief når man vender tilbage efter kl. 06
+    let lastSeenDay = localISO();
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState !== 'visible') return;
+      if (localISO() !== lastSeenDay) { lastSeenDay = localISO(); briefAutoTried = false; }
+      if (activePanel === 'today') renderToday();
+      maybeAutoBrief();
+    });
     window.addEventListener('resize', () => {
       if (document.getElementById('panel-stats').classList.contains('active')) {
         renderCharts();
