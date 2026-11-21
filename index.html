@@ -1409,6 +1409,30 @@
   @media (min-width: 720px) {
     nav { padding-left: max(16px, calc((100vw - 680px) / 2 + 20px)); }
   }
+  .section-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+  .section-head .eyebrow { margin: 0; }
+  .section-status { font-size: 11px; color: var(--forest); display: inline-flex; align-items: center; gap: 4px; }
+  .log-tile .tile-label { display: flex; align-items: center; gap: 6px; }
+  .tile-lock { display: inline-flex; align-items: center; font-size: 9px; font-weight: 500; letter-spacing: 0.6px; text-transform: uppercase; color: var(--clay); }
+  .log-tile.locked .tile-lock { color: var(--forest); }
+  .day-pick {
+    display: flex; gap: 6px; overflow-x: auto; margin: -12px -24px 22px; padding: 0 24px 2px;
+    scrollbar-width: none; -webkit-overflow-scrolling: touch;
+  }
+  .day-pick::-webkit-scrollbar { display: none; }
+  .day-pick button {
+    flex-shrink: 0; display: inline-flex; align-items: center; gap: 5px;
+    background: var(--paper-card); border: 1px solid var(--line); color: var(--ink-soft);
+    font-weight: 500; font-size: 12px; padding: 7px 12px; border-radius: var(--r-pill); cursor: pointer;
+  }
+  .day-pick button.active { background: var(--ink); border-color: var(--ink); color: var(--paper); }
+  .sheet-foot { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 20px; }
+  .sheet-foot .autosave { margin: 0; }
+  .sheet-foot .link-btn { font-size: 14px; padding: 6px 2px; }
+  .sheet.is-locked .scale-btn { cursor: default; }
+  .sheet.is-locked .scale-btn:not(.selected) .emoji { opacity: 0.45; }
+  .sheet.is-locked .stepper button { opacity: 0.3; cursor: default; }
+  .sheet.is-locked .stepper { background: var(--paper-sunk); }
   .btn-primary {
     width: 100%; background: var(--forest); color: var(--paper);
     border: none; font-weight: 500; font-size: 15px;
@@ -1477,9 +1501,9 @@
     </section>
 
     <section class="stat-row">
-      <div class="stat-chip"><span class="num" id="chipSteps">–</span><span class="label">Skridt</span></div>
-      <div class="stat-chip"><span class="num" id="chipSleep">–</span><span class="label">Søvn</span></div>
-      <div class="stat-chip"><span class="num" id="chipHr">–</span><span class="label">Hvilepuls</span></div>
+      <div class="stat-chip"><span class="num" id="chipSteps">–</span><span class="label">Skridt i går</span></div>
+      <div class="stat-chip"><span class="num" id="chipSleep">–</span><span class="label">Søvn i nat</span></div>
+      <div class="stat-chip"><span class="num" id="chipHr">–</span><span class="label">Puls i går</span></div>
     </section>
 
     <article class="card trainer-card">
@@ -1495,12 +1519,12 @@
     </article>
 
     <section class="today-section">
-      <p class="eyebrow">Log i dag</p>
+      <div class="section-head"><p class="eyebrow">Morgen-log · i går</p><span class="section-status" id="morningLogStatus"></span></div>
       <div class="log-grid" id="logGrid">
-        <button class="log-tile empty" data-metric="steps" type="button"><span class="num plus">+</span><span class="tile-label">Skridt</span></button>
-        <button class="log-tile empty" data-metric="sleep" type="button"><span class="num plus">+</span><span class="tile-label">Søvn</span></button>
-        <button class="log-tile empty" data-metric="energy" type="button"><span class="num plus">+</span><span class="tile-label">Energi</span></button>
-        <button class="log-tile empty" data-metric="restingHr" type="button"><span class="num plus">+</span><span class="tile-label">Hvilepuls</span></button>
+        <button class="log-tile empty" data-metric="steps" type="button"><span class="num plus">+</span><span class="tile-label">Skridt<span class="tile-lock"></span></span></button>
+        <button class="log-tile empty" data-metric="sleep" type="button"><span class="num plus">+</span><span class="tile-label">Søvn<span class="tile-lock"></span></span></button>
+        <button class="log-tile empty" data-metric="energy" type="button"><span class="num plus">+</span><span class="tile-label">Energi<span class="tile-lock"></span></span></button>
+        <button class="log-tile empty" data-metric="restingHr" type="button"><span class="num plus">+</span><span class="tile-label">Hvilepuls<span class="tile-lock"></span></span></button>
       </div>
     </section>
 
@@ -1904,9 +1928,13 @@
     <div class="handle-zone" id="sheetHandle"><div class="handle"></div></div>
     <p class="eyebrow" id="sheetEyebrow"></p>
     <h2 id="sheetTitle"></h2>
+    <div class="day-pick" id="sheetDays" aria-label="Vælg dag"></div>
     <div id="sheetBody"></div>
-    <p class="autosave" id="sheetAutosave"></p>
-    <button class="btn-primary" id="sheetDoneBtn" type="button">Gem</button>
+    <div class="sheet-foot">
+      <p class="autosave" id="sheetAutosave"></p>
+      <button class="link-btn" id="sheetUnlockBtn" type="button" hidden>Ret</button>
+    </div>
+    <button class="btn-primary" id="sheetDoneBtn" type="button">Gem og lås</button>
   </div>
 </div>
 
@@ -3198,6 +3226,7 @@
     d.setDate(d.getDate() - ((d.getDay() + 6) % 7));
     return localISO(d);
   }
+  function shortDM(iso) { const [, mm, dd] = iso.split('-'); return `${parseInt(dd)}/${parseInt(mm)}`; }
   const fmtInt = (n) => Math.round(n).toLocaleString('da-DK');
   const fmtDec = (n) => (Math.round(n * 10) / 10).toLocaleString('da-DK', { maximumFractionDigits: 1 });
   const avg = (arr) => arr.length ? arr.reduce((a, b) => a + b, 0) / arr.length : null;
@@ -3258,7 +3287,9 @@
     const part = h < 10 ? 'morgen' : h < 18 ? 'dag' : 'aften';
     document.getElementById('todayGreeting').innerHTML = `God<span>${part}</span>,<br>Christian`;
 
-    const m = metricsFor(today) || {};
+    const logDate = addDaysISO(today, -1); // morgen-loggen gælder i går
+    const m = metricsFor(logDate) || {};
+    const locked = m.locked || {};
     document.getElementById('chipSteps').innerHTML = isNum(m.steps) ? fmtInt(m.steps) : '–';
     document.getElementById('chipSleep').innerHTML = isNum(m.sleepHours) ? `${fmtDec(m.sleepHours)}<small>t</small>` : '–';
     document.getElementById('chipHr').innerHTML = isNum(m.restingHr) ? String(m.restingHr) : '–';
@@ -3272,6 +3303,9 @@
     };
     document.querySelectorAll('#logGrid .log-tile').forEach(tile => {
       const v = tiles[tile.dataset.metric];
+      const isLockedTile = v != null && !!locked[tile.dataset.metric];
+      tile.classList.toggle('locked', isLockedTile);
+      tile.querySelector('.tile-lock').innerHTML = isLockedTile ? LOCK_SVG : (v != null ? 'kladde' : '');
       tile.classList.toggle('empty', v == null);
       tile.classList.toggle('logged', v != null);
       const num = tile.querySelector('.num');
@@ -3288,6 +3322,8 @@
     document.getElementById('wkStepsFill').style.width = Math.min(100, wk.stepsTotal / STEPS_WEEK_GOAL * 100) + '%';
     document.getElementById('wkStepsBar').setAttribute('aria-valuenow', wk.stepsTotal);
 
+    const allLocked = ['steps', 'sleep', 'energy', 'restingHr'].every(k => locked[k]);
+    document.getElementById('morningLogStatus').innerHTML = allLocked ? `${LOCK_SVG} Låst` : '';
     renderTrainerCard();
   }
 
@@ -3324,63 +3360,113 @@
   });
 
   // ============================
-  // QUICK-LOG BOTTOM SHEETS
+  // QUICK-LOG BOTTOM SHEETS — morgen-log for i går, låses ved Gem
   // ============================
+  // Hver dailyMetrics-post gælder sin dato: skridt, energi og hvilepuls for dagen,
+  // søvn = natten efter dagen. locked = { steps, sleep, energy, restingHr } sættes ved Gem.
   const SLEEP_EMOJI = ['😴', '😑', '🙂', '😊', '💪'];
   const ENERGY_EMOJI = ['🪫', '😕', '😐', '🙂', '⚡'];
-  const SHEETS = {
-    steps:     { eyebrow: 'Log skridt',    title: 'Hvor mange skridt?' },
-    sleep:     { eyebrow: 'Log søvn',      title: 'Hvor godt sov du?' },
-    energy:    { eyebrow: 'Log energi',    title: 'Hvordan er energien?' },
-    restingHr: { eyebrow: 'Log hvilepuls', title: 'Hvilepuls i morges?' },
-  };
+  const SHEET_EYEBROW = { steps: 'Log skridt', sleep: 'Log søvn', energy: 'Log energi', restingHr: 'Log hvilepuls' };
+  const BACKFILL_DAYS = 7;
+  const LOCK_SVG = '<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>';
   let sheetType = null;
   let sheetDate = null;
+  let sheetEditing = false;
   let sheetSaveTimer = null;
 
-  function scaleHtml(emojis, selected, name) {
+  const yesterdayISO = () => addDaysISO(localISO(), -1);
+  function dayWord(iso) {
+    if (iso === yesterdayISO()) return 'i går';
+    return DAY_NAMES[new Date(iso + 'T12:00:00').getDay()];
+  }
+  function sheetTitle(type, iso) {
+    const w = dayWord(iso);
+    if (type === 'steps') return `Hvor mange skridt ${w}?`;
+    if (type === 'sleep') return w === 'i går' ? 'Hvor godt sov du i nat?' : `Hvor godt sov du natten efter ${w}?`;
+    if (type === 'energy') return `Hvordan var energien ${w}?`;
+    return `Hvilepuls ${w}?`;
+  }
+  function hasValue(m, type) {
+    if (!m) return false;
+    if (type === 'sleep') return isNum(m.sleepHours) || isNum(m.sleepScore);
+    return isNum(m[type]);
+  }
+  function isLocked(date, type) {
+    const m = metricsFor(date);
+    return !!(m && m.locked && m.locked[type]);
+  }
+
+  function scaleHtml(emojis, selected, name, disabled) {
     return `<div class="scale" role="radiogroup" aria-label="${name}">` + emojis.map((em, i) => {
       const v = i + 1, on = selected === v;
-      return `<button type="button" class="scale-btn${on ? ' selected' : ''}" data-value="${v}" role="radio" aria-checked="${on}" aria-label="${name} ${v} af 5">
+      return `<button type="button" class="scale-btn${on ? ' selected' : ''}" data-value="${v}" role="radio" aria-checked="${on}" aria-label="${name} ${v} af 5"${disabled ? ' disabled' : ''}>
         <span class="emoji">${em}</span><span class="score">${v}</span></button>`;
     }).join('') + '</div>';
   }
-  function stepperHtml(label, valueHtml, minusLabel, plusLabel) {
+  function stepperHtml(label, valueHtml, minusLabel, plusLabel, disabled) {
+    const dis = disabled ? ' disabled' : '';
     return `<div class="stepper-block">
       <p class="stepper-label">${label}</p>
-      <div class="stepper">
-        <button type="button" data-step="-1" aria-label="${minusLabel}">−</button>
+      <div class="stepper${disabled ? ' locked' : ''}">
+        <button type="button" data-step="-1" aria-label="${minusLabel}"${dis}>−</button>
         <div class="stepper-value">${valueHtml}</div>
-        <button type="button" data-step="1" aria-label="${plusLabel}">+</button>
+        <button type="button" data-step="1" aria-label="${plusLabel}"${dis}>+</button>
       </div></div>`;
   }
 
-  function renderSheetBody() {
+  function renderDayPick() {
+    const yest = yesterdayISO();
+    const days = Array.from({ length: BACKFILL_DAYS }, (_, i) => addDaysISO(yest, -i));
+    document.getElementById('sheetDays').innerHTML = days.map(d => {
+      const label = d === yest ? 'I går' : `${DAY_NAMES[new Date(d + 'T12:00:00').getDay()].slice(0, 3)} ${shortDM(d)}`;
+      const lock = isLocked(d, sheetType) ? ` ${LOCK_SVG}` : '';
+      return `<button type="button" data-day="${d}" class="${d === sheetDate ? 'active' : ''}">${label}${lock}</button>`;
+    }).join('');
+  }
+
+  function renderSheet() {
+    const locked = isLocked(sheetDate, sheetType) && !sheetEditing;
+    document.getElementById('sheetEyebrow').textContent = SHEET_EYEBROW[sheetType];
+    document.getElementById('sheetTitle').textContent = sheetTitle(sheetType, sheetDate);
+    renderDayPick();
     const m = metricsFor(sheetDate) || {};
     const body = document.getElementById('sheetBody');
+    const ro = locked ? ' readonly' : '';
     if (sheetType === 'steps') {
-      body.innerHTML = stepperHtml('Skridt i dag · ±100',
-        `<input type="number" id="sheetNum" inputmode="numeric" min="0" max="100000" step="100" placeholder="0" value="${isNum(m.steps) ? m.steps : ''}" aria-label="Antal skridt">`,
-        '100 skridt færre', '100 skridt flere');
+      body.innerHTML = stepperHtml('Skridt hele dagen · ±100',
+        `<input type="number" id="sheetNum" inputmode="numeric" min="0" max="100000" step="100" placeholder="0" value="${isNum(m.steps) ? m.steps : ''}" aria-label="Antal skridt"${ro}>`,
+        '100 skridt færre', '100 skridt flere', locked);
     } else if (sheetType === 'sleep') {
       const hours = isNum(m.sleepHours) ? m.sleepHours : 7.5;
-      body.innerHTML = scaleHtml(SLEEP_EMOJI, m.sleepScore, 'Søvnkvalitet') +
-        stepperHtml('Hvor mange timer?', `<output id="sheetOut">${fmtDec(hours)}</output><small>t</small>`, 'En halv time mindre', 'En halv time mere');
+      body.innerHTML = scaleHtml(SLEEP_EMOJI, m.sleepScore, 'Søvnkvalitet', locked) +
+        stepperHtml('Hvor mange timer?', `<output id="sheetOut">${fmtDec(hours)}</output><small>t</small>`, 'En halv time mindre', 'En halv time mere', locked);
     } else if (sheetType === 'energy') {
-      body.innerHTML = scaleHtml(ENERGY_EMOJI, m.energy, 'Energi');
+      body.innerHTML = scaleHtml(ENERGY_EMOJI, m.energy, 'Energi', locked);
     } else if (sheetType === 'restingHr') {
       body.innerHTML = stepperHtml('Slag pr. minut',
-        `<input type="number" id="sheetNum" inputmode="numeric" min="40" max="100" step="1" placeholder="55" value="${isNum(m.restingHr) ? m.restingHr : ''}" aria-label="Hvilepuls">`,
-        'Et slag mindre', 'Et slag mere');
+        `<input type="number" id="sheetNum" inputmode="numeric" min="40" max="100" step="1" placeholder="55" value="${isNum(m.restingHr) ? m.restingHr : ''}" aria-label="Hvilepuls"${ro}>`,
+        'Et slag mindre', 'Et slag mere', locked);
     }
+    document.getElementById('sheet').classList.toggle('is-locked', locked);
+    document.getElementById('sheetUnlockBtn').hidden = !locked;
+    document.getElementById('sheetDoneBtn').textContent = locked ? 'Luk' : 'Gem og lås';
+    setAutosave(locked ? 'locked' : hasValue(m, sheetType) ? 'draft' : 'idle');
   }
 
   function setAutosave(state) {
     const el = document.getElementById('sheetAutosave');
-    el.textContent = state === 'pending' ? 'Gemmer…' : state === 'saved' ? '✓ Automatisk gemt' : 'Gemmes automatisk';
+    el.innerHTML = state === 'pending' ? 'Gemmer…'
+      : state === 'saved' ? '✓ Automatisk gemt · låses når du trykker Gem'
+      : state === 'draft' ? 'Kladde · låses når du trykker Gem'
+      : state === 'locked' ? `${LOCK_SVG} Låst`
+      : 'Gemmes automatisk · låses når du trykker Gem';
   }
 
+  function canEdit() {
+    return sheetType && (!isLocked(sheetDate, sheetType) || sheetEditing);
+  }
   function changeMetric(patch) {
+    if (!canEdit()) return;
     upsertMetric(sheetDate, patch);
     renderToday();
     setAutosave('pending');
@@ -3392,17 +3478,15 @@
     clearTimeout(sheetSaveTimer);
     sheetSaveTimer = null;
     await cloudSave();
-    if (sheetType) setAutosave('saved');
+    if (sheetType && canEdit()) setAutosave('saved');
   }
 
-  function openSheet(type) {
-    if (!SHEETS[type]) return;
+  function openSheet(type, date) {
+    if (!SHEET_EYEBROW[type]) return;
     sheetType = type;
-    sheetDate = localISO();
-    document.getElementById('sheetEyebrow').textContent = SHEETS[type].eyebrow;
-    document.getElementById('sheetTitle').textContent = SHEETS[type].title;
-    renderSheetBody();
-    setAutosave(metricsFor(sheetDate) ? 'saved' : 'idle');
+    sheetDate = date || yesterdayISO();
+    sheetEditing = false;
+    renderSheet();
     const sheet = document.getElementById('sheet');
     sheet.style.transform = '';
     document.getElementById('sheetOverlay').hidden = false;
@@ -3414,13 +3498,45 @@
     document.getElementById('sheetOverlay').hidden = true;
     document.body.style.overflow = '';
     sheetType = null;
+    sheetEditing = false;
   }
   const closeSheet = () => popOverlay('sheet');
 
   document.getElementById('sheetDim').addEventListener('click', closeSheet);
-  document.getElementById('sheetDoneBtn').addEventListener('click', closeSheet);
+  document.getElementById('sheetDoneBtn').addEventListener('click', async () => {
+    if (canEdit() && hasValue(metricsFor(sheetDate), sheetType)) {
+      const rec = metricsFor(sheetDate);
+      rec.locked = { ...(rec.locked || {}), [sheetType]: true };
+      clearTimeout(sheetSaveTimer);
+      sheetSaveTimer = null;
+      renderToday();
+      cloudSave();
+      showToast('Gemt og låst');
+    }
+    closeSheet();
+  });
+  document.getElementById('sheetUnlockBtn').addEventListener('click', () => {
+    if (!confirm('Lås op og ret værdien?')) return;
+    sheetEditing = true;
+    renderSheet();
+  });
+  document.getElementById('sheetDays').addEventListener('click', (e) => {
+    const b = e.target.closest('button[data-day]');
+    if (!b || b.dataset.day === sheetDate) return;
+    flushSheetSave();
+    // En påbegyndt rettelse af en låst dag låses igen, før der skiftes dag
+    if (sheetEditing && hasValue(metricsFor(sheetDate), sheetType)) {
+      const rec = metricsFor(sheetDate);
+      rec.locked = { ...(rec.locked || {}), [sheetType]: true };
+      cloudSave();
+    }
+    sheetDate = b.dataset.day;
+    sheetEditing = false;
+    renderSheet();
+  });
 
   document.getElementById('sheetBody').addEventListener('click', (e) => {
+    if (!canEdit()) return;
     const scaleBtn = e.target.closest('.scale-btn');
     if (scaleBtn) {
       const v = parseInt(scaleBtn.dataset.value);
@@ -3455,7 +3571,7 @@
     }
   });
   document.getElementById('sheetBody').addEventListener('input', (e) => {
-    if (e.target.id !== 'sheetNum') return;
+    if (e.target.id !== 'sheetNum' || !canEdit()) return;
     const raw = e.target.value;
     if (raw === '') return;
     const n = parseInt(raw);
@@ -3464,7 +3580,7 @@
     if (sheetType === 'restingHr' && n >= 40 && n <= 100) changeMetric({ restingHr: n });
   });
   document.getElementById('sheetBody').addEventListener('change', (e) => {
-    if (e.target.id !== 'sheetNum') return;
+    if (e.target.id !== 'sheetNum' || !canEdit()) return;
     const n = parseInt(e.target.value);
     if (isNaN(n)) return;
     if (sheetType === 'steps') { const v = Math.max(0, Math.min(100000, n)); e.target.value = v; changeMetric({ steps: v }); }
@@ -3535,7 +3651,8 @@
       today,
       weekday: DAY_NAMES[now.getDay()],
       timeNow: now.toTimeString().slice(0, 5),
-      recentMetrics: metricsInRange(from, today).map(({ id, ...rest }) => rest),
+      metricsNote: 'Hver post i recentMetrics gælder sin dato: skridt, energi og hvilepuls for den dag, sleepHours/sleepScore for natten efter den dag. Ortwed logger gårsdagen om morgenen, så dagens dato er normalt tom.',
+      recentMetrics: metricsInRange(addDaysISO(from, -1), today).map(({ id, locked, ...rest }) => rest),
       recentWorkouts: entries.filter(e => inLast7(e.date)).map(compactEntry),
       otherTraining: {
         morgenrutine: dailyLog.filter(d => inLast7(d.date)).map(d => ({ date: d.date, reps: d.reps })),
@@ -3761,7 +3878,6 @@
   // NYE GRAFER — skridt, søvn, hvilepuls
   // ============================
   const FOREST_COLORS = { top: '#4A6049', bottom: '#384937', dot: '#4A6049', grid: 'rgba(74, 96, 73, 0.10)', fill: 'rgba(74, 96, 73, ' };
-  const shortDM = (iso) => { const [, mm, dd] = iso.split('-'); return `${parseInt(dd)}/${parseInt(mm)}`; };
 
   function drawStepsChart() {
     const canvas = document.getElementById('stepsChart');
