@@ -1,0 +1,3 @@
+# Lokale Firestore-backups (indeholder persondata)
+backup-pre-migration-*.json
+traening-backup-*.json

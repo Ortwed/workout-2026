@@ -1491,6 +1491,7 @@
   const auth = getAuth(fbApp);
   const db = getFirestore(fbApp);
   let currentUser = null;
+  let dataLoaded = false; // sættes først når cloudLoad er lykkedes
 
   // Gemmer hele datasættet i ét dokument pr. bruger
   async function cloudLoad() {
@@ -1506,19 +1507,31 @@
         backLog = d.backLog || [];
         yogaLog = d.yogaLog || [];
         wodLog = d.wodLog || [];
+        dailyMetrics = d.dailyMetrics || [];
+        weeklyMetrics = d.weeklyMetrics || [];
+        chatHistory = d.chatHistory || [];
+        trainerBrief = d.trainerBrief || null;
       } else {
         entries = []; weekProgress = {}; dailyLog = []; backLog = []; yogaLog = []; wodLog = [];
+        dailyMetrics = []; weeklyMetrics = []; chatHistory = []; trainerBrief = null;
       }
+      dataLoaded = true;
     } catch (e) {
-      showToast('Kunne ikke hente data');
+      // Gem aldrig oven i skyen, hvis vi ikke fik hentet data — det ville overskrive alt med tomme lister.
+      dataLoaded = false;
+      showToast('Kunne ikke hente data — genindlæs siden');
     }
   }
 
   async function cloudSave() {
-    if (!currentUser) return;
+    if (!currentUser || !dataLoaded) return;
     try {
       const ref = doc(db, 'users', currentUser.uid);
-      await setDoc(ref, { entries, weekProgress, dailyLog, backLog, yogaLog, wodLog, updated: Date.now() });
+      await setDoc(ref, {
+        entries, weekProgress, dailyLog, backLog, yogaLog, wodLog,
+        dailyMetrics, weeklyMetrics, chatHistory: chatHistory.slice(-CHAT_HISTORY_MAX), trainerBrief,
+        updated: Date.now()
+      }, { merge: true });
     } catch (e) {
       showToast('Kunne ikke gemme i skyen');
     }
@@ -1599,6 +1612,11 @@
   let backLog = []; // [{id, date, holds: {b_thorakal_arme: 20, ...}}]
   let yogaLog = []; // [{id, date}] — bare markering af at rutinen er lavet
   let wodLog = []; // [{id, date, format, result, detail}]
+  let dailyMetrics = [];  // [{id, date, steps?, sleepHours?, sleepScore?, energy?, restingHr?}]
+  let weeklyMetrics = []; // [{id, weekStart, weightKg?, strengthSessions?}]
+  let chatHistory = [];   // [{id, ts, role: 'user'|'majoren', content}]
+  let trainerBrief = null; // {date, body, workoutTitle?, workoutDetail?, generatedAt}
+  const CHAT_HISTORY_MAX = 400; // holder dokumentet langt under Firestores 1 MB-grænse
 
   // FULL BODY PROGRAM — fra #Levforhelvede
   const FULLBODY = [
@@ -1866,7 +1884,7 @@
   // ============================
   function exportData() {
     const data = {
-      version: 1,
+      version: 2,
       exported: new Date().toISOString(),
       entries: entries,
       weekProgress: weekProgress,
@@ -1874,6 +1892,10 @@
       backLog: backLog,
       yogaLog: yogaLog,
       wodLog: wodLog,
+      dailyMetrics: dailyMetrics,
+      weeklyMetrics: weeklyMetrics,
+      chatHistory: chatHistory,
+      trainerBrief: trainerBrief,
     };
     const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
@@ -1904,6 +1926,11 @@
         backLog = data.backLog || [];
         yogaLog = data.yogaLog || [];
         wodLog = data.wodLog || [];
+        // Nye felter (v2). Ældre backups har dem ikke — så beholdes de nuværende.
+        if (data.dailyMetrics) dailyMetrics = data.dailyMetrics;
+        if (data.weeklyMetrics) weeklyMetrics = data.weeklyMetrics;
+        if (data.chatHistory) chatHistory = data.chatHistory;
+        if (data.trainerBrief !== undefined) trainerBrief = data.trainerBrief;
         await saveEntries();
         await saveProgress();
         await saveDailyLog();
